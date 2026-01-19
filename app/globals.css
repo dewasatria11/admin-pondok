@@ -1,0 +1,240 @@
+:root {
+  color-scheme: light;
+  --bg: #f4f1ea;
+  --bg-contrast: #f9f7f2;
+  --ink: #1c1a17;
+  --ink-soft: #4a433b;
+  --accent: #ca4d2a;
+  --accent-soft: #f5c7b8;
+  --danger: #b3261e;
+  --card: #ffffff;
+  --border: rgba(28, 26, 23, 0.12);
+  --shadow: 0 24px 60px rgba(28, 26, 23, 0.12);
+  --font-display: "Fraunces", "Iowan Old Style", serif;
+  --font-body: "Space Grotesk", "Avenir Next", sans-serif;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  font-family: var(--font-body);
+  color: var(--ink);
+  background: radial-gradient(
+      1200px 700px at 10% 10%,
+      #fff8ee 0%,
+      rgba(255, 248, 238, 0.5) 50%,
+      rgba(255, 248, 238, 0) 100%
+    ),
+    linear-gradient(140deg, #f2ede3 0%, #f8f6f0 60%, #ede6dc 100%);
+}
+
+.page {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 64px 20px 80px;
+}
+
+.panel {
+  width: min(960px, 100%);
+  background: var(--card);
+  border-radius: 28px;
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow);
+  padding: clamp(24px, 4vw, 40px);
+  display: grid;
+  gap: 28px;
+  position: relative;
+  overflow: hidden;
+}
+
+.panel::before,
+.panel::after {
+  content: "";
+  position: absolute;
+  border-radius: 999px;
+  filter: blur(0);
+  opacity: 0.65;
+  pointer-events: none;
+}
+
+.panel::before {
+  width: 220px;
+  height: 220px;
+  background: radial-gradient(circle, #f6d9c8 0%, rgba(246, 217, 200, 0) 70%);
+  top: -90px;
+  right: -60px;
+}
+
+.panel::after {
+  width: 260px;
+  height: 260px;
+  background: radial-gradient(circle, #f2c5a6 0%, rgba(242, 197, 166, 0) 70%);
+  bottom: -140px;
+  left: -80px;
+}
+
+.header {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.title {
+  font-family: var(--font-display);
+  font-size: clamp(28px, 4vw, 44px);
+  margin: 0;
+  letter-spacing: 0.5px;
+}
+
+.subtitle {
+  margin: 0;
+  color: var(--ink-soft);
+  font-size: 16px;
+}
+
+.content-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 20px;
+}
+
+.info-card {
+  padding: 18px 20px;
+  border-radius: 18px;
+  border: 1px solid var(--border);
+  background: var(--bg-contrast);
+  display: grid;
+  gap: 8px;
+}
+
+.info-card h3 {
+  margin: 0;
+  font-size: 15px;
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+}
+
+.info-card p {
+  margin: 0;
+  font-size: 16px;
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  border-radius: 999px;
+  padding: 6px 12px;
+  font-size: 13px;
+  font-weight: 600;
+  background: var(--accent-soft);
+  color: var(--ink);
+}
+
+.danger-zone {
+  border-radius: 22px;
+  padding: 22px;
+  border: 1px dashed rgba(179, 38, 30, 0.4);
+  background: linear-gradient(135deg, #fff5f3 0%, #fff 100%);
+  display: grid;
+  gap: 18px;
+}
+
+.danger-title {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 24px;
+}
+
+.danger-text {
+  margin: 0;
+  color: var(--ink-soft);
+  line-height: 1.5;
+}
+
+.form-grid {
+  display: grid;
+  gap: 12px;
+}
+
+.form-grid label {
+  font-size: 13px;
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+}
+
+.form-grid input {
+  width: 100%;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  padding: 12px 14px;
+  font-size: 15px;
+  font-family: var(--font-body);
+}
+
+.form-grid input:focus {
+  outline: 2px solid rgba(202, 77, 42, 0.35);
+  border-color: rgba(202, 77, 42, 0.6);
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.wipe-button {
+  border: none;
+  border-radius: 999px;
+  padding: 12px 22px;
+  background: var(--danger);
+  color: white;
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  box-shadow: 0 16px 30px rgba(179, 38, 30, 0.25);
+}
+
+.wipe-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+.wipe-button:not(:disabled):hover {
+  transform: translateY(-1px);
+}
+
+.status {
+  font-size: 14px;
+  color: var(--ink-soft);
+}
+
+.status strong {
+  color: var(--ink);
+}
+
+@media (max-width: 600px) {
+  .actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .wipe-button {
+    width: 100%;
+    text-align: center;
+  }
+}
