@@ -3,31 +3,126 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
+import { supabaseBrowser } from '../../lib/supabaseBrowser';
+
+type SystemModule = {
+    type: 'table' | 'storage';
+    name: string;
+    label: string;
+    category: string;
+    status: 'ok' | 'error';
+    count?: number;
+    fileCount?: number;
+    latency: number;
+    error?: string;
+};
+
+type SystemHealth = {
+    status: string;
+    timestamp: string;
+    latency: number;
+    modules: SystemModule[];
+};
+
+type MetricsRow = {
+    id: string;
+    created_at: string;
+    status: string;
+    latency_ms: number;
+    modules: SystemModule[];
+};
+
+const toHealth = (row: MetricsRow): SystemHealth => ({
+    status: row.status,
+    timestamp: row.created_at,
+    latency: row.latency_ms,
+    modules: row.modules ?? [],
+});
 
 export default function SystemMonitorPage() {
-    const [data, setData] = useState<any>(null);
+    const [data, setData] = useState<SystemHealth | null>(null);
     const [loading, setLoading] = useState(true);
     const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
 
-    const fetchData = async () => {
+    const applyHealth = (health: SystemHealth) => {
+        setData(health);
+        const timestamp = health.timestamp ? new Date(health.timestamp) : new Date();
+        setLastUpdated(timestamp);
+        setLoading(false);
+    };
+
+    const fetchMetrics = async () => {
+        try {
+            const res = await fetch('/api/system/metrics', { cache: 'no-store' });
+            if (!res.ok) {
+                return false;
+            }
+            const json = (await res.json()) as SystemHealth;
+            if (!json?.modules) {
+                return false;
+            }
+            applyHealth(json);
+            return true;
+        } catch (e) {
+            return false;
+        }
+    };
+
+    const fetchHealth = async () => {
         try {
             const res = await fetch('/api/system/health', { cache: 'no-store' });
             const json = await res.json();
             if (res.ok) {
-                setData(json);
-                setLastUpdated(new Date());
+                applyHealth(json);
+                return true;
             }
         } catch (e) {
             console.error(e);
-        } finally {
-            setLoading(false);
         }
+        return false;
     };
 
     useEffect(() => {
-        fetchData();
-        const interval = setInterval(fetchData, 30000); // Poll every 30s
-        return () => clearInterval(interval);
+        let channel: any;
+
+        const loadInitial = async () => {
+            const ok = await fetchMetrics();
+            if (!ok) {
+                await fetchHealth();
+            }
+        };
+
+        loadInitial();
+
+        const interval = setInterval(async () => {
+            const ok = await fetchMetrics();
+            if (!ok) {
+                await fetchHealth();
+            }
+        }, 60000);
+
+        if (supabaseBrowser) {
+            channel = supabaseBrowser
+                .channel('system-metrics')
+                .on(
+                    'postgres_changes',
+                    { event: 'INSERT', schema: 'public', table: 'system_metrics' },
+                    (payload) => {
+                        if (!payload?.new) {
+                            return;
+                        }
+                        applyHealth(toHealth(payload.new as MetricsRow));
+                    }
+                )
+                .subscribe();
+        }
+
+        return () => {
+            clearInterval(interval);
+            if (channel && supabaseBrowser) {
+                supabaseBrowser.removeChannel(channel);
+            }
+        };
     }, []);
 
     const getStatusColor = (status: string) => {
@@ -42,11 +137,11 @@ export default function SystemMonitorPage() {
         return 'text-red-400';
     };
 
-    // Group modules
-    const coreModules = data?.modules?.filter((m: any) => m.category === 'core') || [];
-    const cmsModules = data?.modules?.filter((m: any) => m.category === 'cms') || [];
-    const refModules = data?.modules?.filter((m: any) => m.category === 'ref') || [];
-    const storageModules = data?.modules?.filter((m: any) => m.category === 'storage') || [];
+    const modules = data?.modules ?? [];
+    const coreModules = modules.filter((m) => m.category === 'core');
+    const cmsModules = modules.filter((m) => m.category === 'cms');
+    const refModules = modules.filter((m) => m.category === 'ref');
+    const storageModules = modules.filter((m) => m.category === 'storage');
 
     return (
         <div className="min-h-screen bg-[#0f172a] text-slate-200 font-sans selection:bg-cyan-500/30">
@@ -82,8 +177,8 @@ export default function SystemMonitorPage() {
 
                 {/* HEADER STATS */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    <StatCard title="Total Tables Checked" value={data ? data.modules.filter((m: any) => m.type === 'table').length : '-'} icon="📊" />
-                    <StatCard title="Storage Buckets" value={data ? data.modules.filter((m: any) => m.type === 'storage').length : '-'} icon="🗄️" />
+                    <StatCard title="Total Tables Checked" value={data ? modules.filter((m) => m.type === 'table').length : '-'} icon="📊" />
+                    <StatCard title="Storage Buckets" value={data ? modules.filter((m) => m.type === 'storage').length : '-'} icon="🗄️" />
                     <StatCard title="Last Updated" value={lastUpdated ? lastUpdated.toLocaleTimeString() : '-'} icon="🕒" />
                 </div>
 
@@ -97,7 +192,7 @@ export default function SystemMonitorPage() {
                         {/* CORE INFRASTRUCTURE */}
                         <Section title="Core Infrastructure" description="Critical tables for application functionality">
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                                {coreModules.map((m: any) => (
+                                {coreModules.map((m) => (
                                     <ModuleCard key={m.name} module={m} />
                                 ))}
                             </div>
@@ -106,7 +201,7 @@ export default function SystemMonitorPage() {
                         {/* STORAGE SYSTEMS */}
                         <Section title="Storage Systems" description="File object storage buckets status">
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                                {storageModules.map((m: any) => (
+                                {storageModules.map((m) => (
                                     <ModuleCard key={m.name} module={m} icon="📦" isStorage />
                                 ))}
                             </div>
@@ -115,7 +210,7 @@ export default function SystemMonitorPage() {
                         {/* CONTENT MANAGEMENT */}
                         <Section title="CMS Content" description="Dynamic content tables">
                             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                                {cmsModules.map((m: any) => (
+                                {cmsModules.map((m) => (
                                     <ModuleCard key={m.name} module={m} compact />
                                 ))}
                             </div>
@@ -124,7 +219,7 @@ export default function SystemMonitorPage() {
                         {/* REFERENCE DATA */}
                         <Section title="Reference & Settings" description="Static configuration tables">
                             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                                {refModules.map((m: any) => (
+                                {refModules.map((m) => (
                                     <ModuleCard key={m.name} module={m} compact />
                                 ))}
                             </div>
@@ -164,7 +259,17 @@ function StatCard({ title, value, icon }: { title: string, value: string | numbe
     );
 }
 
-function ModuleCard({ module, compact, icon, isStorage }: { module: any, compact?: boolean, icon?: string, isStorage?: boolean }) {
+function ModuleCard({
+    module,
+    compact,
+    icon,
+    isStorage
+}: {
+    module: SystemModule,
+    compact?: boolean,
+    icon?: string,
+    isStorage?: boolean
+}) {
     const isError = module.status === 'error';
 
     return (

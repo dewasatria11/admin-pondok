@@ -1,7 +1,5 @@
-
 import { createClient } from '@supabase/supabase-js';
 import { NextResponse } from 'next/server';
-import { getSystemHealth } from '../../../../lib/systemHealth';
 
 const supabaseUrl =
   process.env.SUPABASE_URL ?? process.env.NEXT_PUBLIC_SUPABASE_URL ?? '';
@@ -11,31 +9,44 @@ const supabaseKey =
   '';
 const supabase = createClient(supabaseUrl, supabaseKey);
 
-export const dynamic = 'force-dynamic'; // Always fetch fresh data
+export const dynamic = 'force-dynamic';
 
 export async function GET() {
   if (!supabaseUrl || !supabaseKey) {
     return NextResponse.json(
       {
-        status: 'critical',
+        status: 'error',
         error: 'Supabase environment variables are missing.',
-        timestamp: new Date().toISOString(),
       },
       { status: 500 }
     );
   }
 
-  try {
-    const health = await getSystemHealth(supabase);
-    return NextResponse.json(health);
-  } catch (error: any) {
+  const { data, error } = await supabase
+    .from('system_metrics')
+    .select('id, created_at, status, latency_ms, modules')
+    .order('created_at', { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  if (error) {
     return NextResponse.json(
       {
-        status: 'critical',
-        error: error?.message ?? 'Unexpected server error.',
-        timestamp: new Date().toISOString(),
+        status: 'error',
+        error: error.message,
       },
       { status: 500 }
     );
   }
+
+  if (!data) {
+    return NextResponse.json({ status: 'empty' }, { status: 404 });
+  }
+
+  return NextResponse.json({
+    status: data.status,
+    timestamp: data.created_at,
+    latency: data.latency_ms,
+    modules: data.modules ?? [],
+  });
 }
