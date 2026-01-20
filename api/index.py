@@ -14,6 +14,10 @@ try:
 except ImportError:
     pass  # Allow import to fail during build/check if libs aren't there yet
 
+# Supabase credentials from environment
+supabase_url = os.getenv("SUPABASE_URL")
+supabase_key = os.getenv("SUPABASE_SERVICE_ROLE_KEY")
+
 # --- Seeder Logic (Adapted from seeder.py) ---
 
 # Initialize Faker
