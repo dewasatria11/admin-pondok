@@ -19,10 +19,12 @@ export default function SeederPage() {
 
     const handleRun = async () => {
         setIsRunning(true);
-        setLogs(["🚀 Starting seeder...", "Waiting for server response..."]);
+        setLogs(["🚀 Starting seeder...", "Waiting for serverless function (this may take 10-20s)..."]);
 
         try {
-            const response = await fetch("/api/seeder", {
+            // Call the Python Serverless Function directly
+            // Vercel maps 'api/index.py' to '/api' path usually
+            const response = await fetch("/api", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
@@ -30,23 +32,17 @@ export default function SeederPage() {
                 body: JSON.stringify({ count, withFiles }),
             });
 
-            if (!response.body) {
-                throw new Error("No response body");
+            const data = await response.json();
+
+            if (data.success) {
+                setLogs((prev) => [...prev, "Serverless execution completed:", ...data.logs]);
+            } else {
+                setLogs((prev) => [...prev, `❌ Error from server: ${data.error || 'Unknown error'}`]);
+                if (data.logs) setLogs((prev) => [...prev, ...data.logs]);
             }
 
-            const reader = response.body.getReader();
-            const decoder = new TextDecoder();
-
-            while (true) {
-                const { done, value } = await reader.read();
-                if (done) break;
-                const text = decoder.decode(value);
-                // Split by newlines and filter empty strings if needed, 
-                // but keeping original formatting is often better for terminal output
-                setLogs((prev) => [...prev, text]);
-            }
         } catch (error: any) {
-            setLogs((prev) => [...prev, `❌ Error: ${error.message}`]);
+            setLogs((prev) => [...prev, `❌ Network/Client Error: ${error.message}`]);
         } finally {
             setIsRunning(false);
             setLogs((prev) => [...prev, "🏁 Process finished."]);
@@ -55,7 +51,7 @@ export default function SeederPage() {
 
     return (
         <div className="p-6 max-w-4xl mx-auto">
-            <h1 className="text-2xl font-bold mb-6">Database Seeder Bot</h1>
+            <h1 className="text-2xl font-bold mb-6">Database Seeder Bot (Serverless)</h1>
 
             <div className="bg-white p-6 rounded-lg shadow-md mb-6 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-end">
@@ -103,9 +99,9 @@ export default function SeederPage() {
 
             <div className="bg-black text-green-400 p-4 rounded-lg font-mono text-sm h-96 overflow-y-auto whitespace-pre-wrap">
                 {logs.length === 0 ? (
-                    <span className="text-gray-500">// Output logs will appear here...</span>
+                    <span className="text-gray-500">// Output logs will appear here after process completes...</span>
                 ) : (
-                    logs.join("")
+                    logs.join("\n")
                 )}
                 <div ref={logsEndRef} />
             </div>
