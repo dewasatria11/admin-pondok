@@ -12,6 +12,13 @@ type CloudflareSeries = {
   };
 };
 
+type TrafficQueryConfig = {
+  groupField: "httpRequests1mGroups" | "httpRequests1hGroups";
+  windowMinutes: number;
+  limit: number;
+  groupSeconds: number;
+};
+
 export async function GET() {
   const token = process.env.CLOUDFLARE_API_TOKEN;
   const zoneId = process.env.CLOUDFLARE_ZONE_ID;
@@ -28,62 +35,92 @@ export async function GET() {
   }
 
   const now = new Date();
-  const windowMinutes = 30;
-  const since = new Date(now.getTime() - windowMinutes * 60 * 1000);
+  const primaryConfig: TrafficQueryConfig = {
+    groupField: "httpRequests1mGroups",
+    windowMinutes: 30,
+    limit: 60,
+    groupSeconds: 60,
+  };
+  const fallbackConfig: TrafficQueryConfig = {
+    groupField: "httpRequests1hGroups",
+    windowMinutes: 24 * 60,
+    limit: 24,
+    groupSeconds: 60 * 60,
+  };
 
-  const query = `
-    query Traffic($zoneTag: String!, $since: DateTime!, $until: DateTime!) {
-      viewer {
-        zones(filter: { zoneTag: $zoneTag }) {
-          httpRequests1mGroups(
-            limit: 60
-            filter: { datetime_geq: $since, datetime_lt: $until }
-          ) {
-            dimensions { datetime }
-            sum {
-              requests
-              bytes
-              cachedRequests
-              cachedBytes
+  const buildQuery = (groupField: TrafficQueryConfig["groupField"], limit: number) => `
+      query Traffic($zoneTag: String!, $since: DateTime!, $until: DateTime!) {
+        viewer {
+          zones(filter: { zoneTag: $zoneTag }) {
+            ${groupField}(
+              limit: ${limit}
+              filter: { datetime_geq: $since, datetime_lt: $until }
+            ) {
+              dimensions { datetime }
+              sum {
+                requests
+                bytes
+                cachedRequests
+                cachedBytes
+              }
             }
           }
         }
       }
-    }
-  `;
+    `;
 
   try {
-    const response = await fetch("https://api.cloudflare.com/client/v4/graphql", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${token}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        query,
-        variables: {
-          zoneTag: zoneId,
-          since: since.toISOString(),
-          until: now.toISOString(),
+    const requestTraffic = async (config: TrafficQueryConfig) => {
+      const since = new Date(now.getTime() - config.windowMinutes * 60 * 1000);
+      const response = await fetch("https://api.cloudflare.com/client/v4/graphql", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
         },
-      }),
-    });
+        body: JSON.stringify({
+          query: buildQuery(config.groupField, config.limit),
+          variables: {
+            zoneTag: zoneId,
+            since: since.toISOString(),
+            until: now.toISOString(),
+          },
+        }),
+      });
+      const payload = await response.json();
+      return { response, payload, config };
+    };
 
-    const payload = await response.json();
-
-    if (!response.ok || payload.errors) {
-      return NextResponse.json(
-        {
-          status: "error",
-          error: "Cloudflare API error.",
-          details: payload.errors ?? payload,
-        },
-        { status: 502 }
+    const isAuthzError = (payload: any, groupField: string) =>
+      Array.isArray(payload?.errors) &&
+      payload.errors.some(
+        (err: any) =>
+          err?.extensions?.code === "authz" &&
+          Array.isArray(err?.path) &&
+          err.path.includes(groupField)
       );
+
+    let result = await requestTraffic(primaryConfig);
+
+    if (!result.response.ok || result.payload?.errors) {
+      if (isAuthzError(result.payload, primaryConfig.groupField)) {
+        result = await requestTraffic(fallbackConfig);
+      }
+
+      if (!result.response.ok || result.payload?.errors) {
+        return NextResponse.json(
+          {
+            status: "error",
+            error: "Cloudflare API error.",
+            details: result.payload?.errors ?? result.payload,
+          },
+          { status: 502 }
+        );
+      }
     }
 
     const groups: CloudflareSeries[] =
-      payload?.data?.viewer?.zones?.[0]?.httpRequests1mGroups ?? [];
+      result.payload?.data?.viewer?.zones?.[0]?.[result.config.groupField] ?? [];
 
     const series = groups.map((group) => {
       const requests = group.sum?.requests ?? 0;
@@ -97,7 +134,7 @@ export async function GET() {
         bytes,
         cachedRequests,
         cachedBytes,
-        rps: Number((requests / 60).toFixed(2)),
+        rps: Number((requests / result.config.groupSeconds).toFixed(2)),
       };
     });
 
@@ -109,13 +146,13 @@ export async function GET() {
         acc.cachedBytes += item.cachedBytes;
         return acc;
       },
-      { requests: 0, bytes: 0, cachedRequests: 0, cachedBytes: 0 }
+        { requests: 0, bytes: 0, cachedRequests: 0, cachedBytes: 0 }
     );
 
     const maxRps = series.reduce((max, item) => Math.max(max, item.rps), 0);
     const avgRps =
       totals.requests > 0
-        ? Number((totals.requests / (windowMinutes * 60)).toFixed(2))
+        ? Number((totals.requests / (result.config.windowMinutes * 60)).toFixed(2))
         : 0;
     const cacheHit =
       totals.requests > 0
@@ -125,7 +162,7 @@ export async function GET() {
     return NextResponse.json({
       status: "ok",
       generatedAt: now.toISOString(),
-      windowMinutes,
+      windowMinutes: result.config.windowMinutes,
       series,
       totals,
       rates: {
@@ -134,7 +171,7 @@ export async function GET() {
         cacheHitPercent: cacheHit,
         avgBandwidthBytesPerSec:
           totals.bytes > 0
-            ? Math.round(totals.bytes / (windowMinutes * 60))
+            ? Math.round(totals.bytes / (result.config.windowMinutes * 60))
             : 0,
       },
     });

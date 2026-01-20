@@ -34,6 +34,12 @@ type TrafficResponse = {
 };
 
 const numberFormatter = new Intl.NumberFormat("id-ID");
+const formatWindowLabel = (minutes: number) => {
+  if (minutes >= 60 && minutes % 60 === 0) {
+    return `${minutes / 60} jam`;
+  }
+  return `${minutes} menit`;
+};
 
 export default function TrafficMonitorPage() {
   const [data, setData] = useState<TrafficResponse | null>(null);
@@ -206,7 +212,7 @@ export default function TrafficMonitorPage() {
               <StatCard
                 title="Peak RPS"
                 value={`${data.rates.peakRps} rps`}
-                subtitle="puncak dalam 30 menit"
+                subtitle={`puncak dalam ${formatWindowLabel(data.windowMinutes)}`}
                 series={rpsSeries}
                 accent="rose"
               />
