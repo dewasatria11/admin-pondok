@@ -1,0 +1,8 @@
+{
+  "crons": [
+    {
+      "path": "/api/system/metrics/refresh",
+      "schedule": "*/1 * * * *"
+    }
+  ]
+}

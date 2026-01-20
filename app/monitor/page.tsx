@@ -1,8 +1,8 @@
-
 'use client';
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
+import { motion } from 'framer-motion';
 import { supabaseBrowser } from '../../lib/supabaseBrowser';
 
 type SystemModule = {
@@ -38,6 +38,29 @@ const toHealth = (row: MetricsRow): SystemHealth => ({
     latency: row.latency_ms,
     modules: row.modules ?? [],
 });
+
+const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+        opacity: 1,
+        transition: {
+            staggerChildren: 0.1,
+            delayChildren: 0.1,
+        },
+    },
+};
+
+const itemVariants = {
+    hidden: { opacity: 0, y: 20 },
+    visible: {
+        opacity: 1,
+        y: 0,
+        transition: {
+            duration: 0.5,
+            ease: [0.4, 0, 0.2, 1],
+        },
+    },
+};
 
 export default function SystemMonitorPage() {
     const [data, setData] = useState<SystemHealth | null>(null);
@@ -126,14 +149,14 @@ export default function SystemMonitorPage() {
     }, []);
 
     const getStatusColor = (status: string) => {
-        if (status === 'ok' || status === 'healthy') return 'bg-green-500 shadow-green-500/50';
-        if (status === 'degraded') return 'bg-yellow-500 shadow-yellow-500/50';
-        return 'bg-red-500 shadow-red-500/50';
+        if (status === 'ok' || status === 'healthy') return 'status-ok';
+        if (status === 'degraded') return 'status-warning';
+        return 'status-error';
     };
 
     const getLatencyColor = (ms: number) => {
-        if (ms < 200) return 'text-green-400';
-        if (ms < 800) return 'text-yellow-400';
+        if (ms < 200) return 'text-emerald-400';
+        if (ms < 800) return 'text-amber-400';
         return 'text-red-400';
     };
 
@@ -144,92 +167,111 @@ export default function SystemMonitorPage() {
     const storageModules = modules.filter((m) => m.category === 'storage');
 
     return (
-        <div className="min-h-screen bg-[#0f172a] text-slate-200 font-sans selection:bg-cyan-500/30">
-            {/* Navbar Minimal */}
-            <nav className="border-b border-slate-800 bg-[#0f172a]/80 backdrop-blur sticky top-0 z-50">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="royal-page">
+            {/* Navbar */}
+            <motion.nav
+                className="royal-nav mb-8"
+                initial={{ y: -20, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                transition={{ duration: 0.5 }}
+            >
+                <div className="royal-container">
                     <div className="flex items-center justify-between h-16">
-                        <div className="flex items-center gap-3">
-                            <Link href="/" className="text-slate-400 hover:text-white transition-colors">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 16 16">
-                                    <path fillRule="evenodd" d="M15 8a.5.5 0 0 0-.5-.5H2.707l3.147-3.146a.5.5 0 1 0-.708-.708l-4 4a.5.5 0 0 0 0 .708l4 4a.5.5 0 0 0 .708-.708L2.707 8.5H14.5A.5.5 0 0 0 15 8z" />
-                                </svg>
+                        <div className="flex items-center gap-4">
+                            <Link href="/" className="royal-nav-link">
+                                ← Kembali
                             </Link>
-                            <h1 className="text-xl font-bold bg-gradient-to-r from-cyan-400 to-blue-500 bg-clip-text text-transparent">
-                                System Health Monitor
-                            </h1>
+                            <div>
+                                <h1 className="text-xl font-bold bg-gradient-gold bg-clip-text text-transparent">
+                                    System Health Monitor
+                                </h1>
+                            </div>
                         </div>
 
                         <div className="flex items-center gap-4">
                             <div className="text-xs text-right hidden sm:block">
-                                <div className="text-slate-400">Total Latency</div>
+                                <div className="text-text-muted">Total Latency</div>
                                 <div className={`font-mono font-bold ${getLatencyColor(data?.latency || 0)}`}>
                                     {data?.latency ? `${data.latency}ms` : '...'}
                                 </div>
                             </div>
-                            <div className={`h-3 w-3 rounded-full ${getStatusColor(data?.status || 'loading')} animate-pulse`}></div>
+                            <motion.div
+                                className={`status-dot ${getStatusColor(data?.status || 'loading')}`}
+                                animate={{ scale: [1, 1.2, 1] }}
+                                transition={{ duration: 2, repeat: Infinity }}
+                            />
                         </div>
                     </div>
                 </div>
-            </nav>
+            </motion.nav>
 
-            <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-12">
+            <main className="royal-container">
+                <motion.div
+                    initial="hidden"
+                    animate="visible"
+                    variants={containerVariants}
+                >
+                    {/* HEADER STATS */}
+                    <motion.div variants={itemVariants} className="royal-grid royal-grid-3 mb-12">
+                        <StatCard title="Total Tables Checked" value={data ? modules.filter((m) => m.type === 'table').length : '-'} icon="📊" />
+                        <StatCard title="Storage Buckets" value={data ? modules.filter((m) => m.type === 'storage').length : '-'} icon="🗄️" />
+                        <StatCard title="Last Updated" value={lastUpdated ? lastUpdated.toLocaleTimeString() : '-'} icon="🕒" />
+                    </motion.div>
 
-                {/* HEADER STATS */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    <StatCard title="Total Tables Checked" value={data ? modules.filter((m) => m.type === 'table').length : '-'} icon="📊" />
-                    <StatCard title="Storage Buckets" value={data ? modules.filter((m) => m.type === 'storage').length : '-'} icon="🗄️" />
-                    <StatCard title="Last Updated" value={lastUpdated ? lastUpdated.toLocaleTimeString() : '-'} icon="🕒" />
-                </div>
+                    {loading && !data ? (
+                        <motion.div variants={itemVariants} className="royal-card text-center py-20">
+                            <motion.div
+                                className="inline-block w-12 h-12 border-t-2 border-b-2 rounded-full"
+                                style={{ borderColor: 'var(--gold-base)' }}
+                                animate={{ rotate: 360 }}
+                                transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
+                            />
+                            <p className="mt-4 text-text-muted">Connecting to Supabase satellites...</p>
+                        </motion.div>
+                    ) : (
+                        <>
+                            {/* CORE INFRASTRUCTURE */}
+                            <Section title="Core Infrastructure" description="Critical tables for application functionality">
+                                <div className="royal-grid royal-grid-3">
+                                    {coreModules.map((m, idx) => (
+                                        <ModuleCard key={m.name} module={m} index={idx} />
+                                    ))}
+                                </div>
+                            </Section>
 
-                {loading && !data ? (
-                    <div className="text-center py-20">
-                        <div className="inline-block animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-cyan-500"></div>
-                        <p className="mt-4 text-slate-400">Connecting to Supabase satellites...</p>
-                    </div>
-                ) : (
-                    <>
-                        {/* CORE INFRASTRUCTURE */}
-                        <Section title="Core Infrastructure" description="Critical tables for application functionality">
-                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                                {coreModules.map((m) => (
-                                    <ModuleCard key={m.name} module={m} />
-                                ))}
-                            </div>
-                        </Section>
+                            {/* STORAGE SYSTEMS */}
+                            <Section title="Storage Systems" description="File object storage buckets status">
+                                <div className="royal-grid royal-grid-3">
+                                    {storageModules.map((m, idx) => (
+                                        <ModuleCard key={m.name} module={m} icon="📦" isStorage index={idx} />
+                                    ))}
+                                </div>
+                            </Section>
 
-                        {/* STORAGE SYSTEMS */}
-                        <Section title="Storage Systems" description="File object storage buckets status">
-                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                                {storageModules.map((m) => (
-                                    <ModuleCard key={m.name} module={m} icon="📦" isStorage />
-                                ))}
-                            </div>
-                        </Section>
+                            {/* CONTENT MANAGEMENT */}
+                            <Section title="CMS Content" description="Dynamic content tables">
+                                <div className="royal-grid royal-grid-4">
+                                    {cmsModules.map((m, idx) => (
+                                        <ModuleCard key={m.name} module={m} compact index={idx} />
+                                    ))}
+                                </div>
+                            </Section>
 
-                        {/* CONTENT MANAGEMENT */}
-                        <Section title="CMS Content" description="Dynamic content tables">
-                            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                                {cmsModules.map((m) => (
-                                    <ModuleCard key={m.name} module={m} compact />
-                                ))}
-                            </div>
-                        </Section>
-
-                        {/* REFERENCE DATA */}
-                        <Section title="Reference & Settings" description="Static configuration tables">
-                            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                                {refModules.map((m) => (
-                                    <ModuleCard key={m.name} module={m} compact />
-                                ))}
-                            </div>
-                        </Section>
-                    </>
-                )}
+                            {/* REFERENCE DATA */}
+                            <Section title="Reference & Settings" description="Static configuration tables">
+                                <div className="royal-grid royal-grid-4">
+                                    {refModules.map((m, idx) => (
+                                        <ModuleCard key={m.name} module={m} compact index={idx} />
+                                    ))}
+                                </div>
+                            </Section>
+                        </>
+                    )}
+                </motion.div>
             </main>
 
-            <footer className="border-t border-slate-800 mt-20 py-8 text-center text-slate-500 text-sm">
-                <p>Admin Pondok System Monitor &bull; Powered by Next.js & Supabase</p>
+            <footer className="royal-footer mt-20">
+                <p>Admin Pondok System Monitor • Powered by Next.js & Supabase</p>
             </footer>
         </div>
     );
@@ -237,25 +279,42 @@ export default function SystemMonitorPage() {
 
 function Section({ title, description, children }: { title: string, description: string, children: React.ReactNode }) {
     return (
-        <div className="animate-in fade-in slide-in-from-bottom-4 duration-700">
-            <div className="mb-6 border-b border-slate-800 pb-2">
-                <h2 className="text-2xl font-bold text-white">{title}</h2>
-                <p className="text-slate-400 text-sm">{description}</p>
+        <motion.div variants={itemVariants} className="mb-12">
+            <div className="mb-6 border-b border-border-subtle pb-2">
+                <h2 className="royal-section-title">{title}</h2>
+                <p className="text-sm text-text-muted">{description}</p>
             </div>
             {children}
-        </div>
+        </motion.div>
     );
 }
 
 function StatCard({ title, value, icon }: { title: string, value: string | number, icon: string }) {
     return (
-        <div className="bg-[#1e293b]/50 backdrop-blur border border-slate-700/50 rounded-xl p-6 flex items-center justify-between shadow-lg hover:border-cyan-500/30 transition-all group">
+        <motion.div
+            className="royal-stat-card"
+            whileHover={{ scale: 1.05, y: -8 }}
+            transition={{ duration: 0.3 }}
+        >
             <div>
-                <div className="text-slate-400 text-sm font-medium mb-1">{title}</div>
-                <div className="text-3xl font-bold text-white group-hover:text-cyan-400 transition-colors">{value}</div>
+                <div className="royal-label mb-1">{title}</div>
+                <motion.div
+                    className="royal-stat-value"
+                    initial={{ scale: 0.8, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    transition={{ delay: 0.2 }}
+                >
+                    {value}
+                </motion.div>
             </div>
-            <div className="text-4xl opacity-50 grayscale group-hover:grayscale-0 transition-all">{icon}</div>
-        </div>
+            <motion.div
+                className="text-4xl opacity-50"
+                whileHover={{ scale: 1.2, opacity: 1 }}
+                transition={{ duration: 0.3 }}
+            >
+                {icon}
+            </motion.div>
+        </motion.div>
     );
 }
 
@@ -263,67 +322,92 @@ function ModuleCard({
     module,
     compact,
     icon,
-    isStorage
+    isStorage,
+    index = 0
 }: {
     module: SystemModule,
     compact?: boolean,
     icon?: string,
-    isStorage?: boolean
+    isStorage?: boolean,
+    index?: number
 }) {
     const isError = module.status === 'error';
 
     return (
-        <div className={`
-      relative overflow-hidden rounded-lg border transition-all duration-300 hover:-translate-y-1
-      ${isError
-                ? 'bg-red-950/20 border-red-900/50 hover:border-red-500/50'
-                : 'bg-[#1e293b] border-slate-800 hover:border-cyan-500/50 hover:shadow-[0_0_20px_rgba(6,182,212,0.15)]'
-            }
-      ${compact ? 'p-4' : 'p-6'}
-    `}>
+        <motion.div
+            className={`royal-card ${compact ? 'p-4' : 'p-6'}`}
+            style={{
+                borderColor: isError ? 'rgba(239, 68, 68, 0.4)' : undefined,
+                background: isError ? 'rgba(239, 68, 68, 0.05)' : undefined,
+            }}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: index * 0.05 }}
+            whileHover={{ scale: 1.02, y: -4 }}
+        >
             {/* Status Indicator Line */}
-            <div className={`absolute top-0 left-0 w-1 h-full ${isError ? 'bg-red-500' : 'bg-cyan-500'}`}></div>
+            <div
+                className="absolute top-0 left-0 w-1 h-full rounded-l-xl"
+                style={{
+                    background: isError
+                        ? 'linear-gradient(180deg, #ef4444 0%, #dc2626 100%)'
+                        : 'var(--gradient-gold)'
+                }}
+            />
 
             <div className="flex justify-between items-start mb-3">
                 <div>
-                    <h3 className={`font-semibold text-slate-200 ${compact ? 'text-sm' : 'text-lg'}`}>
+                    <h3 className={`font-semibold text-text-primary ${compact ? 'text-sm' : 'text-lg'}`}>
                         {module.label}
                     </h3>
-                    <p className="text-xs text-slate-500 font-mono">{module.name}</p>
+                    <p className="text-xs text-text-muted font-mono">{module.name}</p>
                 </div>
-                <div className={`
-          px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider
-          ${isError ? 'bg-red-900 text-red-200' : 'bg-cyan-950 text-cyan-200'}
-        `}>
+                <motion.div
+                    className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider`}
+                    style={{
+                        background: isError ? 'rgba(239, 68, 68, 0.2)' : 'rgba(212, 175, 55, 0.2)',
+                        color: isError ? '#fca5a5' : '#fbbf24',
+                    }}
+                    whileHover={{ scale: 1.1 }}
+                >
                     {isError ? 'ERR' : 'OK'}
-                </div>
+                </motion.div>
             </div>
 
             <div className="flex items-end justify-between">
                 <div>
-                    <div className={`font-bold text-white ${compact ? 'text-xl' : 'text-3xl'}`}>
+                    <motion.div
+                        className={`font-bold text-text-primary ${compact ? 'text-xl' : 'text-3xl'}`}
+                        initial={{ scale: 0 }}
+                        animate={{ scale: 1 }}
+                        transition={{ delay: index * 0.05 + 0.2, type: 'spring' }}
+                    >
                         {isError
                             ? '-'
                             : (isStorage ? module.fileCount ?? 0 : module.count ?? 0).toLocaleString()}
-                    </div>
-                    <div className="text-xs text-slate-500 mt-1">
+                    </motion.div>
+                    <div className="text-xs text-text-muted mt-1">
                         {isStorage ? 'Object Files' : 'Total Rows'}
                     </div>
                 </div>
 
                 <div className="text-right">
-                    <div className={`text-xs font-mono font-bold ${module.latency < 200 ? 'text-green-500' : 'text-yellow-500'}`}>
+                    <div className={`text-xs font-mono font-bold ${module.latency < 200 ? 'text-emerald-500' : 'text-amber-500'}`}>
                         {module.latency}ms
                     </div>
-                    <div className="text-[10px] text-slate-600">Latency</div>
+                    <div className="text-[10px] text-text-muted">Latency</div>
                 </div>
             </div>
 
             {isError && (
-                <div className="mt-3 text-xs text-red-400 bg-red-950/50 p-2 rounded">
+                <motion.div
+                    className="mt-3 text-xs text-red-400 bg-red-950/50 p-2 rounded"
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: 'auto' }}
+                >
                     {module.error}
-                </div>
+                </motion.div>
             )}
-        </div>
+        </motion.div>
     );
 }

@@ -1,6 +1,8 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useState, useMemo } from "react";
+import Link from "next/link";
+import { motion } from "framer-motion";
 
 const CONFIRM_TEXT = "HAPUS SEMUA";
 
@@ -9,6 +11,41 @@ type WipeResult = {
   storage?: { bucket: string; deletedFiles: number };
   db?: { truncated: boolean };
   error?: string;
+};
+
+const containerVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.1,
+      delayChildren: 0.2,
+    },
+  },
+};
+
+const itemVariants = {
+  hidden: { opacity: 0, y: 20 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: {
+      duration: 0.5,
+      ease: [0.4, 0, 0.2, 1],
+    },
+  },
+};
+
+const cardHoverVariants = {
+  rest: { scale: 1, y: 0 },
+  hover: {
+    scale: 1.02,
+    y: -8,
+    transition: {
+      duration: 0.3,
+      ease: [0.4, 0, 0.2, 1],
+    },
+  },
 };
 
 export default function HomePage() {
@@ -64,149 +101,303 @@ export default function HomePage() {
   };
 
   return (
-    <main className="page">
-      <section className="panel">
-        <header className="header">
-          <span className="badge">Admin Wipe Console</span>
-          <h1 className="title">Admin Pondok</h1>
-          <p className="subtitle">
-            Dashboard ini hanya untuk operasi wipe. Pastikan kamu paham risiko
-            sebelum menekan tombol.
+    <div className="royal-page">
+      <motion.div
+        className="royal-container"
+        initial="hidden"
+        animate="visible"
+        variants={containerVariants}
+      >
+        {/* Header Section */}
+        <motion.header variants={itemVariants} className="mb-12 text-center">
+          <motion.div
+            className="inline-block mb-4"
+            animate={{ rotate: [0, 5, -5, 0] }}
+            transition={{ duration: 2, repeat: Infinity, repeatDelay: 3 }}
+          >
+            <span className="text-6xl">👑</span>
+          </motion.div>
+          <h1 className="royal-title">Admin Pondok</h1>
+          <p className="royal-subtitle max-w-2xl mx-auto">
+            Enterprise-grade administration dashboard with Royal Noir Gold
+            aesthetics
           </p>
-        </header>
+        </motion.header>
 
-        <div className="content-grid">
-          <div className="info-card">
-            <h3>Bucket target</h3>
-            <p>pendaftar-files (recursive delete)</p>
+        {/* Quick Access Cards */}
+        <motion.section variants={itemVariants} className="mb-12">
+          <div className="royal-grid royal-grid-3">
+            {/* Seeder Card */}
+            <motion.div
+              initial="rest"
+              whileHover="hover"
+              variants={cardHoverVariants}
+            >
+              <Link href="/seeder" className="block">
+                <div className="royal-card h-full">
+                  <div className="flex items-start justify-between mb-4">
+                    <motion.div
+                      className="text-4xl"
+                      animate={{ rotate: 360 }}
+                      transition={{
+                        duration: 20,
+                        repeat: Infinity,
+                        ease: "linear",
+                      }}
+                    >
+                      🤖
+                    </motion.div>
+                    <span className="royal-badge">Utility</span>
+                  </div>
+                  <h3 className="royal-section-title mb-2">Data Seeder</h3>
+                  <p className="royal-subtitle mb-4">
+                    Generate dummy data pendaftar & file secara otomatis untuk
+                    testing
+                  </p>
+                  <div className="flex items-center gap-2 text-sm text-gold-light font-semibold">
+                    <span>Buka Seeder</span>
+                    <motion.span
+                      animate={{ x: [0, 5, 0] }}
+                      transition={{ duration: 1.5, repeat: Infinity }}
+                    >
+                      →
+                    </motion.span>
+                  </div>
+                </div>
+              </Link>
+            </motion.div>
+
+            {/* System Monitor Card */}
+            <motion.div
+              initial="rest"
+              whileHover="hover"
+              variants={cardHoverVariants}
+            >
+              <Link href="/monitor" className="block">
+                <div className="royal-card h-full">
+                  <div className="flex items-start justify-between mb-4">
+                    <motion.div
+                      className="text-4xl"
+                      animate={{ scale: [1, 1.1, 1] }}
+                      transition={{ duration: 2, repeat: Infinity }}
+                    >
+                      📊
+                    </motion.div>
+                    <div className="flex items-center gap-2">
+                      <motion.div
+                        className="status-dot status-ok"
+                        animate={{ scale: [1, 1.2, 1] }}
+                        transition={{ duration: 2, repeat: Infinity }}
+                      />
+                      <span className="royal-badge">Live</span>
+                    </div>
+                  </div>
+                  <h3 className="royal-section-title mb-2">System Monitor</h3>
+                  <p className="royal-subtitle mb-4">
+                    Real-time health check: Database, Storage & Latency metrics
+                  </p>
+                  <div className="flex items-center gap-2 text-sm text-gold-light font-semibold">
+                    <span>Buka Dashboard</span>
+                    <motion.span
+                      animate={{ x: [0, 5, 0] }}
+                      transition={{ duration: 1.5, repeat: Infinity }}
+                    >
+                      →
+                    </motion.span>
+                  </div>
+                </div>
+              </Link>
+            </motion.div>
+
+            {/* Traffic Monitor Card */}
+            <motion.div
+              initial="rest"
+              whileHover="hover"
+              variants={cardHoverVariants}
+            >
+              <Link href="/monitor/traffic" className="block">
+                <div className="royal-card h-full">
+                  <div className="flex items-start justify-between mb-4">
+                    <motion.div
+                      className="text-4xl"
+                      animate={{ y: [0, -5, 0] }}
+                      transition={{ duration: 1.5, repeat: Infinity }}
+                    >
+                      📈
+                    </motion.div>
+                    <span className="royal-badge">Analytics</span>
+                  </div>
+                  <h3 className="royal-section-title mb-2">Traffic Monitor</h3>
+                  <p className="royal-subtitle mb-4">
+                    HTTP traffic pulse dengan Cloudflare analytics integration
+                  </p>
+                  <div className="flex items-center gap-2 text-sm text-gold-light font-semibold">
+                    <span>Lihat Traffic</span>
+                    <motion.span
+                      animate={{ x: [0, 5, 0] }}
+                      transition={{ duration: 1.5, repeat: Infinity }}
+                    >
+                      →
+                    </motion.span>
+                  </div>
+                </div>
+              </Link>
+            </motion.div>
           </div>
-          <div className="info-card">
-            <h3>Database target</h3>
-            <p>public.pembayaran &amp; public.pendaftar</p>
-          </div>
-          <div className="info-card">
-            <h3>Status terakhir</h3>
-            <p>
-              {result?.ok
-                ? `${result.storage?.deletedFiles ?? 0} file dihapus`
-                : "Belum ada aksi"}
+        </motion.section>
+
+        {/* Admin Wipe Section */}
+        <motion.section variants={itemVariants} className="royal-card">
+          <div className="mb-6">
+            <div className="flex items-center gap-3 mb-3">
+              <span className="text-3xl">⚠️</span>
+              <h2 className="royal-section-title m-0">Admin Wipe Console</h2>
+            </div>
+            <p className="royal-subtitle">
+              Dashboard ini hanya untuk operasi wipe. Pastikan kamu paham risiko
+              sebelum menekan tombol.
             </p>
           </div>
-        </div>
 
-        <section className="danger-zone">
-          <h2 className="danger-title">Zona Bahaya</h2>
-          <p className="danger-text">
-            Wipe akan menghapus semua file di Storage dan mengosongkan tabel
-            pembayaran serta pendaftar. Aksi ini tidak dapat dibatalkan. "hapus-semua-2026-super-rahasia"
-          </p>
-
-          <div className="form-grid">
-            <label htmlFor="admin-token">Admin token</label>
-            <input
-              id="admin-token"
-              type="password"
-              placeholder="Masukkan x-admin-token"
-              value={token}
-              onChange={(event) => setToken(event.target.value)}
-            />
-
-            <label htmlFor="confirm-text">
-              Ketik &quot;{CONFIRM_TEXT}&quot; untuk konfirmasi
-            </label>
-            <input
-              id="confirm-text"
-              type="text"
-              placeholder={CONFIRM_TEXT}
-              value={confirmText}
-              onChange={(event) => setConfirmText(event.target.value)}
-            />
-          </div>
-
-          <div className="actions">
-            <button
-              className="wipe-button"
-              onClick={handleWipe}
-              disabled={!canSubmit}
+          {/* Info Grid */}
+          <div className="royal-grid royal-grid-3 mb-8">
+            <motion.div
+              className="royal-stat-card"
+              whileHover={{ scale: 1.02 }}
             >
-              {status === "loading" ? "Menghapus..." : "Wipe Sekarang"}
-            </button>
-            <div className="status">
-              <strong>Status:</strong> {message || "Siap menjalankan wipe."}
-            </div>
-          </div>
-        </section>
-      </section>
-      <section className="panel" style={{ marginTop: '2rem' }}>
-        <header className="header">
-          <span className="badge" style={{ backgroundColor: '#0f172a', color: 'white' }}>Utility Tools</span>
-          <h2 className="title" style={{ fontSize: '1.5rem' }}>Admin Utilities</h2>
-          <p className="subtitle">
-            Kumpulan alat bantu untuk monitoring dan manajemen sistem.
-          </p>
-        </header>
+              <p className="royal-label mb-2">Bucket Target</p>
+              <p className="text-text-secondary font-mono text-sm">
+                pendaftar-files
+              </p>
+              <span className="text-xs text-text-muted">(recursive delete)</span>
+            </motion.div>
 
-        <div className="content-grid" style={{ marginTop: '1.5rem', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))' }}>
-
-          {/* Seeder Card */}
-          <div className="info-card" style={{ background: '#f8fafc', borderColor: '#e2e8f0' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <h3 style={{ fontSize: '1.1rem', color: '#1e293b' }}>🤖 Data Seeder</h3>
-            </div>
-            <p style={{ color: '#64748b' }}>Generate dummy data pendaftar & file secara otomatis.</p>
-            <a
-              href="/seeder"
-              style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                backgroundColor: '#2563EB',
-                color: 'white',
-                textDecoration: 'none',
-                padding: '10px 20px',
-                borderRadius: '99px',
-                fontWeight: 600,
-                marginTop: '10px',
-                fontSize: '14px'
-              }}
+            <motion.div
+              className="royal-stat-card"
+              whileHover={{ scale: 1.02 }}
             >
-              Buka Seeder Bot
-            </a>
-          </div>
+              <p className="royal-label mb-2">Database Target</p>
+              <p className="text-text-secondary font-mono text-sm">
+                public.pembayaran
+              </p>
+              <p className="text-text-secondary font-mono text-sm">
+                public.pendaftar
+              </p>
+            </motion.div>
 
-          {/* Monitor Card */}
-          <div className="info-card" style={{ background: '#0f172a', borderColor: '#1e293b' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <h3 style={{ fontSize: '1.1rem', color: '#38bdf8', margin: 0 }}>📊 System Monitor</h3>
-              <span className="relative flex h-3 w-3">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-sky-400 opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-3 w-3 bg-sky-500"></span>
-              </span>
-            </div>
-            <p style={{ color: '#94a3b8' }}>Real-time health check: Database, Storage & Latency.</p>
-            <a
-              href="/monitor"
-              style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                background: 'linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%)',
-                color: 'white',
-                textDecoration: 'none',
-                padding: '10px 20px',
-                borderRadius: '99px',
-                fontWeight: 600,
-                marginTop: '10px',
-                fontSize: '14px',
-                boxShadow: '0 4px 12px rgba(14, 165, 233, 0.3)'
-              }}
+            <motion.div
+              className="royal-stat-card"
+              whileHover={{ scale: 1.02 }}
             >
-              Buka Dashboard
-            </a>
+              <p className="royal-label mb-2">Status Terakhir</p>
+              <p className="text-text-secondary text-sm">
+                {result?.ok
+                  ? `${result.storage?.deletedFiles ?? 0} file dihapus`
+                  : "Belum ada aksi"}
+              </p>
+            </motion.div>
           </div>
 
-        </div>
-      </section>
-    </main>
+          {/* Danger Zone */}
+          <motion.div
+            className="p-6 rounded-2xl border-2 border-dashed"
+            style={{ borderColor: "rgba(239, 68, 68, 0.3)" }}
+            whileHover={{ borderColor: "rgba(239, 68, 68, 0.5)" }}
+          >
+            <h3 className="text-xl font-bold text-red-400 mb-3">
+              ⚡ Zona Bahaya
+            </h3>
+            <p className="royal-subtitle mb-6">
+              Wipe akan menghapus semua file di Storage dan mengosongkan tabel
+              pembayaran serta pendaftar. Aksi ini tidak dapat dibatalkan.
+            </p>
+
+            <div className="space-y-4 mb-6">
+              <div>
+                <label htmlFor="admin-token" className="royal-label block mb-2">
+                  Admin Token
+                </label>
+                <input
+                  id="admin-token"
+                  type="password"
+                  placeholder="Masukkan x-admin-token"
+                  value={token}
+                  onChange={(e) => setToken(e.target.value)}
+                  className="royal-input"
+                />
+              </div>
+
+              <div>
+                <label htmlFor="confirm-text" className="royal-label block mb-2">
+                  Ketik &quot;{CONFIRM_TEXT}&quot; untuk konfirmasi
+                </label>
+                <input
+                  id="confirm-text"
+                  type="text"
+                  placeholder={CONFIRM_TEXT}
+                  value={confirmText}
+                  onChange={(e) => setConfirmText(e.target.value)}
+                  className="royal-input"
+                />
+              </div>
+            </div>
+
+            <div className="flex items-center justify-between gap-4 flex-wrap">
+              <motion.button
+                className="royal-button"
+                onClick={handleWipe}
+                disabled={!canSubmit}
+                whileHover={canSubmit ? { scale: 1.05 } : {}}
+                whileTap={canSubmit ? { scale: 0.95 } : {}}
+                style={{
+                  background: !canSubmit
+                    ? "#4a5568"
+                    : "linear-gradient(135deg, #ef4444 0%, #dc2626 100%)",
+                }}
+              >
+                {status === "loading" ? (
+                  <>
+                    <motion.span
+                      animate={{ rotate: 360 }}
+                      transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                    >
+                      ⏳
+                    </motion.span>
+                    Menghapus...
+                  </>
+                ) : (
+                  <>🗑️ Wipe Sekarang</>
+                )}
+              </motion.button>
+
+              <div className="flex items-center gap-3">
+                <motion.div
+                  className={`status-dot ${status === "loading"
+                      ? "status-warning"
+                      : status === "done"
+                        ? "status-ok"
+                        : status === "error"
+                          ? "status-error"
+                          : "status-idle"
+                    }`}
+                  animate={status === "loading" ? { scale: [1, 1.2, 1] } : {}}
+                  transition={{ duration: 1, repeat: Infinity }}
+                />
+                <span className="text-sm text-text-secondary">
+                  <strong className="text-text-primary">Status:</strong>{" "}
+                  {message || "Siap menjalankan wipe."}
+                </span>
+              </div>
+            </div>
+          </motion.div>
+        </motion.section>
+
+        {/* Footer */}
+        <motion.footer variants={itemVariants} className="royal-footer mt-16">
+          <p>Admin Pondok • Royal Noir Gold Edition</p>
+          <p className="text-xs mt-2">Powered by Next.js & Supabase</p>
+        </motion.footer>
+      </motion.div>
+    </div>
   );
 }

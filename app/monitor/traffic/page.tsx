@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
+import { motion } from "framer-motion";
 
 type TrafficPoint = {
   time: string;
@@ -39,6 +40,29 @@ const formatWindowLabel = (minutes: number) => {
     return `${minutes / 60} jam`;
   }
   return `${minutes} menit`;
+};
+
+const containerVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.08,
+      delayChildren: 0.1,
+    },
+  },
+};
+
+const itemVariants = {
+  hidden: { opacity: 0, y: 20 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: {
+      duration: 0.4,
+      ease: [0.4, 0, 0.2, 1],
+    },
+  },
 };
 
 export default function TrafficMonitorPage() {
@@ -99,202 +123,211 @@ export default function TrafficMonitorPage() {
   );
 
   return (
-    <div className="min-h-screen bg-[#0b1120] text-slate-200 font-sans selection:bg-cyan-500/30">
-      <nav className="border-b border-slate-800 bg-[#0b1120]/80 backdrop-blur sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div className="royal-page">
+      <motion.nav
+        className="royal-nav mb-8"
+        initial={{ y: -20, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ duration: 0.5 }}
+      >
+        <div className="royal-container">
           <div className="flex flex-wrap items-center justify-between gap-4 py-4">
-            <div className="flex items-center gap-3">
-              <Link
-                href="/"
-                className="text-slate-400 hover:text-white transition-colors"
-              >
-                &larr;
+            <div className="flex items-center gap-4">
+              <Link href="/" className="royal-nav-link">
+                ← Kembali
               </Link>
               <div>
-                <p className="text-xs uppercase tracking-[0.3em] text-slate-500">
+                <p className="text-xs uppercase tracking-widest text-text-muted">
                   Traffic Monitor
                 </p>
-                <h1 className="text-2xl font-bold text-white">
+                <h1 className="text-2xl font-bold text-gold-light">
                   HTTP Traffic Pulse
                 </h1>
               </div>
             </div>
 
             <div className="flex items-center gap-4">
-              <Link
-                href="/monitor"
-                className="rounded-full border border-slate-700 px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-slate-300 hover:border-cyan-500/60 hover:text-white transition"
-              >
+              <Link href="/monitor" className="royal-button-secondary text-xs px-4 py-2">
                 System Monitor
               </Link>
-              <div className="text-right text-xs text-slate-400">
+              <div className="text-right text-xs text-text-muted">
                 <div>Last update</div>
-                <div className="font-mono text-slate-200">
+                <div className="font-mono text-text-primary">
                   {lastUpdated ? lastUpdated.toLocaleTimeString() : "--:--:--"}
                 </div>
               </div>
-              <div
-                className={`h-2.5 w-2.5 rounded-full ${
-                  status === "ready"
-                    ? "bg-emerald-400 shadow-[0_0_10px_rgba(52,211,153,0.6)]"
-                    : status === "error"
-                      ? "bg-rose-400 shadow-[0_0_10px_rgba(244,63,94,0.6)]"
-                      : "bg-cyan-400 animate-pulse"
-                }`}
+              <motion.div
+                className={`status-dot ${status === "ready"
+                  ? "status-ok"
+                  : status === "error"
+                    ? "status-error"
+                    : "status-warning"
+                  }`}
+                animate={{ scale: [1, 1.2, 1] }}
+                transition={{ duration: 2, repeat: Infinity }}
               />
             </div>
           </div>
         </div>
-      </nav>
+      </motion.nav>
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-10">
-        {status === "loading" && (
-          <div className="rounded-2xl border border-slate-800 bg-slate-900/40 p-10 text-center">
-            <div className="inline-block animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-cyan-500"></div>
-            <p className="mt-4 text-slate-400">
-              Menghubungkan ke Cloudflare analytics...
-            </p>
-          </div>
-        )}
-
-        {status === "error" && (
-          <div className="rounded-2xl border border-rose-900/60 bg-rose-950/20 p-8">
-            <h2 className="text-lg font-semibold text-rose-200">
-              Gagal memuat data
-            </h2>
-            <p className="mt-2 text-sm text-rose-300">
-              {errorMessage ?? "Periksa kembali token Cloudflare kamu."}
-            </p>
-            {errorDetails && (
-              <pre className="mt-4 overflow-auto rounded-lg border border-rose-900/50 bg-rose-950/40 p-4 text-xs text-rose-100">
-                {errorDetails}
-              </pre>
-            )}
-          </div>
-        )}
-
-        {status === "ready" && data && (
-          <>
-            <section className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
-              <StatCard
-                title={`Total Requests (${data.windowMinutes}m)`}
-                value={numberFormatter.format(data.totals.requests)}
-                subtitle={`${data.rates.avgRps} rps rata-rata`}
-                series={requestsSeries}
-                accent="cyan"
+      <main className="royal-container">
+        <motion.div
+          initial="hidden"
+          animate="visible"
+          variants={containerVariants}
+        >
+          {status === "loading" && (
+            <motion.div variants={itemVariants} className="royal-card text-center py-10">
+              <motion.div
+                className="inline-block w-10 h-10 border-t-2 border-b-2 rounded-full"
+                style={{ borderColor: 'var(--gold-base)' }}
+                animate={{ rotate: 360 }}
+                transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
               />
-              <StatCard
-                title={`Bandwidth (${data.windowMinutes}m)`}
-                value={formatBytes(data.totals.bytes)}
-                subtitle={`${formatBytes(
-                  data.rates.avgBandwidthBytesPerSec
-                )}/s rata-rata`}
-                series={bytesSeries}
-                accent="indigo"
-              />
-              <StatCard
-                title="Cache Hit"
-                value={`${data.rates.cacheHitPercent}%`}
-                subtitle={`${numberFormatter.format(
-                  data.totals.cachedRequests
-                )} cached requests`}
-                series={series.map((point) =>
-                  point.requests
-                    ? Number(
+              <p className="mt-4 text-text-muted">
+                Menghubungkan ke Cloudflare analytics...
+              </p>
+            </motion.div>
+          )}
+
+          {status === "error" && (
+            <motion.div variants={itemVariants} className="royal-card" style={{ borderColor: 'rgba(239, 68, 68, 0.4)' }}>
+              <h2 className="text-lg font-semibold text-red-400 mb-2">
+                ⚠️ Gagal memuat data
+              </h2>
+              <p className="text-sm text-red-300">
+                {errorMessage ?? "Periksa kembali token Cloudflare kamu."}
+              </p>
+              {errorDetails && (
+                <pre className="mt-4 overflow-auto rounded-lg border border-red-900/50 bg-red-950/40 p-4 text-xs text-red-100">
+                  {errorDetails}
+                </pre>
+              )}
+            </motion.div>
+          )}
+
+          {status === "ready" && data && (
+            <>
+              <motion.section variants={itemVariants} className="royal-grid royal-grid-4 mb-8">
+                <StatCard
+                  title={`Total Requests (${data.windowMinutes}m)`}
+                  value={numberFormatter.format(data.totals.requests)}
+                  subtitle={`${data.rates.avgRps} rps rata-rata`}
+                  series={requestsSeries}
+                  accent="cyan"
+                />
+                <StatCard
+                  title={`Bandwidth (${data.windowMinutes}m)`}
+                  value={formatBytes(data.totals.bytes)}
+                  subtitle={`${formatBytes(
+                    data.rates.avgBandwidthBytesPerSec
+                  )}/s rata-rata`}
+                  series={bytesSeries}
+                  accent="indigo"
+                />
+                <StatCard
+                  title="Cache Hit"
+                  value={`${data.rates.cacheHitPercent}%`}
+                  subtitle={`${numberFormatter.format(
+                    data.totals.cachedRequests
+                  )} cached requests`}
+                  series={series.map((point) =>
+                    point.requests
+                      ? Number(
                         ((point.cachedRequests / point.requests) * 100).toFixed(
                           2
                         )
                       )
-                    : 0
-                )}
-                accent="emerald"
-              />
-              <StatCard
-                title="Peak RPS"
-                value={`${data.rates.peakRps} rps`}
-                subtitle={`puncak dalam ${formatWindowLabel(data.windowMinutes)}`}
-                series={rpsSeries}
-                accent="rose"
-              />
-            </section>
+                      : 0
+                  )}
+                  accent="emerald"
+                />
+                <StatCard
+                  title="Peak RPS"
+                  value={`${data.rates.peakRps} rps`}
+                  subtitle={`puncak dalam ${formatWindowLabel(data.windowMinutes)}`}
+                  series={rpsSeries}
+                  accent="rose"
+                />
+              </motion.section>
 
-            <section className="grid grid-cols-1 lg:grid-cols-[2fr,1fr] gap-6">
-              <div className="rounded-2xl border border-slate-800 bg-[#0f172a]/70 p-6">
-                <header className="flex items-center justify-between gap-4">
-                  <div>
-                    <p className="text-xs uppercase tracking-[0.2em] text-slate-500">
-                      Real-time curve
-                    </p>
-                    <h2 className="text-xl font-semibold text-white">
-                      Request per minute
-                    </h2>
+              <div className="grid grid-cols-1 lg:grid-cols-[2fr,1fr] gap-6">
+                <motion.div variants={itemVariants} className="royal-card">
+                  <header className="flex items-center justify-between gap-4 mb-6">
+                    <div>
+                      <p className="royal-label">Real-time curve</p>
+                      <h2 className="royal-section-title">Request per minute</h2>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-xs text-text-muted">Terakhir</p>
+                      <motion.p
+                        className="text-lg font-semibold"
+                        style={{ color: 'var(--gold-light)' }}
+                        key={lastPoint?.requests}
+                        initial={{ scale: 1.2 }}
+                        animate={{ scale: 1 }}
+                      >
+                        {lastPoint
+                          ? numberFormatter.format(lastPoint.requests)
+                          : "-"}
+                      </motion.p>
+                    </div>
+                  </header>
+                  <div className="mt-6">
+                    <Sparkline values={requestsSeries} stroke="#38bdf8" fill="#0ea5e933" />
                   </div>
-                  <div className="text-right">
-                    <p className="text-xs text-slate-500">Terakhir</p>
-                    <p className="text-lg font-semibold text-cyan-300">
-                      {lastPoint
-                        ? numberFormatter.format(lastPoint.requests)
-                        : "-"}
-                    </p>
+                  <div className="mt-4 text-xs text-text-muted flex items-center justify-between">
+                    <span>Window {data.windowMinutes} menit</span>
+                    <span>{series.length} titik data</span>
                   </div>
-                </header>
-                <div className="mt-6">
-                  <Sparkline values={requestsSeries} stroke="#38bdf8" fill="#0ea5e933" />
-                </div>
-                <div className="mt-4 text-xs text-slate-500 flex items-center justify-between">
-                  <span>Window {data.windowMinutes} menit</span>
-                  <span>{series.length} titik data</span>
-                </div>
-              </div>
+                </motion.div>
 
-              <div className="rounded-2xl border border-slate-800 bg-[#0f172a]/70 p-6">
-                <header>
-                  <p className="text-xs uppercase tracking-[0.2em] text-slate-500">
-                    Live Snapshot
-                  </p>
-                  <h2 className="text-xl font-semibold text-white">
-                    Traffic sekarang
-                  </h2>
-                </header>
-                <div className="mt-6 space-y-4 text-sm text-slate-300">
-                  <SnapshotRow
-                    label="Request / menit"
-                    value={
-                      lastPoint
-                        ? numberFormatter.format(lastPoint.requests)
-                        : "-"
-                    }
-                  />
-                  <SnapshotRow
-                    label="RPS"
-                    value={lastPoint ? lastPoint.rps.toFixed(2) : "-"}
-                  />
-                  <SnapshotRow
-                    label="Bandwidth / menit"
-                    value={lastPoint ? formatBytes(lastPoint.bytes) : "-"}
-                  />
-                  <SnapshotRow
-                    label="Cache hit / menit"
-                    value={
-                      lastPoint
-                        ? `${numberFormatter.format(
+                <motion.div variants={itemVariants} className="royal-card">
+                  <header className="mb-6">
+                    <p className="royal-label">Live Snapshot</p>
+                    <h2 className="royal-section-title">Traffic sekarang</h2>
+                  </header>
+                  <div className="space-y-4 text-sm text-text-secondary">
+                    <SnapshotRow
+                      label="Request / menit"
+                      value={
+                        lastPoint
+                          ? numberFormatter.format(lastPoint.requests)
+                          : "-"
+                      }
+                    />
+                    <SnapshotRow
+                      label="RPS"
+                      value={lastPoint ? lastPoint.rps.toFixed(2) : "-"}
+                    />
+                    <SnapshotRow
+                      label="Bandwidth / menit"
+                      value={lastPoint ? formatBytes(lastPoint.bytes) : "-"}
+                    />
+                    <SnapshotRow
+                      label="Cache hit / menit"
+                      value={
+                        lastPoint
+                          ? `${numberFormatter.format(
                             lastPoint.cachedRequests
                           )} req`
-                        : "-"
-                    }
-                  />
-                </div>
-                <div className="mt-8 rounded-xl border border-slate-800 bg-slate-950/60 p-4 text-xs text-slate-400">
-                  Data diperbarui otomatis setiap 30 detik.
-                </div>
+                          : "-"
+                      }
+                    />
+                  </div>
+                  <div className="mt-8 rounded-xl border border-border-subtle bg-noir-deep p-4 text-xs text-text-muted">
+                    📡 Data diperbarui otomatis setiap 30 detik.
+                  </div>
+                </motion.div>
               </div>
-            </section>
-          </>
-        )}
+            </>
+          )}
+        </motion.div>
       </main>
 
-      <footer className="border-t border-slate-800 mt-16 py-8 text-center text-slate-500 text-xs">
-        Traffic Monitor &bull; Cloudflare Analytics
+      <footer className="royal-footer mt-16">
+        Traffic Monitor • Cloudflare Analytics
       </footer>
     </div>
   );
@@ -313,29 +346,42 @@ function StatCard({
   series: number[];
   accent: "cyan" | "indigo" | "emerald" | "rose";
 }) {
-  const accents: Record<typeof accent, { stroke: string; glow: string }> = {
-    cyan: { stroke: "#22d3ee", glow: "shadow-cyan-500/30" },
-    indigo: { stroke: "#6366f1", glow: "shadow-indigo-500/30" },
-    emerald: { stroke: "#34d399", glow: "shadow-emerald-500/30" },
-    rose: { stroke: "#fb7185", glow: "shadow-rose-500/30" },
+  const accents: Record<typeof accent, { stroke: string; color: string }> = {
+    cyan: { stroke: "#22d3ee", color: "#22d3ee" },
+    indigo: { stroke: "#6366f1", color: "#6366f1" },
+    emerald: { stroke: "#34d399", color: "#34d399" },
+    rose: { stroke: "#fb7185", color: "#fb7185" },
   };
 
   return (
-    <div className="rounded-2xl border border-slate-800 bg-[#0f172a]/80 p-5 shadow-xl">
-      <p className="text-xs uppercase tracking-[0.2em] text-slate-500">
-        {title}
-      </p>
+    <motion.div
+      className="royal-stat-card"
+      whileHover={{ scale: 1.02, y: -4 }}
+      transition={{ duration: 0.3 }}
+    >
+      <p className="royal-label">{title}</p>
       <div className="mt-3 flex items-end justify-between gap-4">
         <div>
-          <div className="text-2xl font-semibold text-white">{value}</div>
-          <div className="text-xs text-slate-400 mt-1">{subtitle}</div>
+          <motion.div
+            className="text-2xl font-semibold text-text-primary"
+            initial={{ scale: 0 }}
+            animate={{ scale: 1 }}
+            transition={{ type: 'spring' }}
+          >
+            {value}
+          </motion.div>
+          <div className="text-xs text-text-muted mt-1">{subtitle}</div>
         </div>
-        <div className={`h-8 w-8 rounded-full bg-slate-900 ${accents[accent].glow}`}></div>
+        <motion.div
+          className="w-8 h-8 rounded-full"
+          style={{ background: `${accents[accent].color}33` }}
+          whileHover={{ scale: 1.2 }}
+        />
       </div>
       <div className="mt-4">
         <Sparkline values={series} stroke={accents[accent].stroke} fill={`${accents[accent].stroke}22`} />
       </div>
-    </div>
+    </motion.div>
   );
 }
 
@@ -350,7 +396,7 @@ function Sparkline({
 }) {
   if (!values.length) {
     return (
-      <div className="h-16 rounded-xl border border-slate-800 bg-slate-950/50"></div>
+      <div className="h-16 rounded-xl border border-border-subtle bg-noir-deep"></div>
     );
   }
 
@@ -372,7 +418,13 @@ function Sparkline({
   const areaPoints = `0,${height} ${points} ${width},${height}`;
 
   return (
-    <svg viewBox={`0 0 ${width} ${height}`} className="w-full h-16">
+    <motion.svg
+      viewBox={`0 0 ${width} ${height}`}
+      className="w-full h-16"
+      initial={{ pathLength: 0 }}
+      animate={{ pathLength: 1 }}
+      transition={{ duration: 1.5, ease: "easeInOut" }}
+    >
       <polygon points={areaPoints} fill={fill} />
       <polyline
         points={points}
@@ -382,16 +434,20 @@ function Sparkline({
         strokeLinecap="round"
         strokeLinejoin="round"
       />
-    </svg>
+    </motion.svg>
   );
 }
 
 function SnapshotRow({ label, value }: { label: string; value: string }) {
   return (
-    <div className="flex items-center justify-between gap-6 border-b border-slate-800/60 pb-3">
-      <span className="text-slate-400">{label}</span>
-      <span className="font-mono text-slate-200">{value}</span>
-    </div>
+    <motion.div
+      className="flex items-center justify-between gap-6 border-b border-border-subtle pb-3"
+      whileHover={{ x: 4 }}
+      transition={{ duration: 0.2 }}
+    >
+      <span className="text-text-muted">{label}</span>
+      <span className="font-mono text-text-primary font-semibold">{value}</span>
+    </motion.div>
   );
 }
 

@@ -2,6 +2,30 @@
 
 import Link from "next/link";
 import { useState, useRef, useEffect, useMemo } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+
+const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+        opacity: 1,
+        transition: {
+            staggerChildren: 0.08,
+            delayChildren: 0.1,
+        },
+    },
+};
+
+const itemVariants = {
+    hidden: { opacity: 0, y: 20 },
+    visible: {
+        opacity: 1,
+        y: 0,
+        transition: {
+            duration: 0.4,
+            ease: [0.4, 0, 0.2, 1],
+        },
+    },
+};
 
 export default function SeederPage() {
     const [count, setCount] = useState(10);
@@ -78,8 +102,6 @@ export default function SeederPage() {
         let wasAborted = false;
 
         try {
-            // Call the Python Serverless Function directly
-            // Vercel maps 'api/index.py' to '/api' path usually
             const response = await fetch("/api", {
                 method: "POST",
                 headers: {
@@ -100,7 +122,6 @@ export default function SeederPage() {
                 ]);
                 if (data.logs) setLogs((prev) => [...prev, ...data.logs]);
             }
-
         } catch (error: any) {
             if (error?.name === "AbortError") {
                 wasAborted = true;
@@ -118,154 +139,333 @@ export default function SeederPage() {
     };
 
     return (
-        <main className="page">
-            <section className="panel seeder-panel">
-                <header className="header">
-                    <div className="seeder-header-row">
-                        <span className="badge seeder-badge">Seeder Utility</span>
-                        <Link href="/" className="seeder-back">
-                            ← Kembali ke Dashboard
-                        </Link>
-                    </div>
-                    <h1 className="title">Database Seeder</h1>
-                    <p className="subtitle">
-                        Generate data pendaftar dan file dummy untuk uji aplikasi.
-                    </p>
-                </header>
-
-                <div className="seeder-grid">
-                    <article className="seeder-card">
-                        <h3>Konfigurasi</h3>
-                        <div className="seeder-form">
-                            <label htmlFor="seed-count">Jumlah data pendaftar</label>
-                            <div className="seeder-input">
-                                <input
-                                    id="seed-count"
-                                    type="number"
-                                    value={count}
-                                    onChange={(e) => setCount(parseInt(e.target.value) || 0)}
-                                    min="1"
-                                    max="100"
-                                />
-                                <span>entri</span>
-                            </div>
-
-                            <label className="seeder-toggle" htmlFor="withFiles">
-                                <input
-                                    type="checkbox"
-                                    id="withFiles"
-                                    checked={withFiles}
-                                    onChange={(e) => setWithFiles(e.target.checked)}
-                                />
-                                <span>Upload dummy files (foto, ijazah, dll)</span>
-                            </label>
-
-                            <div className="seeder-actions">
-                                <button
-                                    onClick={handleRun}
-                                    disabled={isRunning}
-                                    className="seeder-button"
+        <div className="royal-page">
+            <div className="royal-container">
+                <motion.div
+                    initial="hidden"
+                    animate="visible"
+                    variants={containerVariants}
+                >
+                    {/* Header */}
+                    <motion.header variants={itemVariants} className="mb-8">
+                        <div className="flex items-center justify-between flex-wrap gap-4 mb-4">
+                            <div className="flex items-center gap-4">
+                                <motion.div
+                                    animate={{ rotate: 360 }}
+                                    transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
+                                    className="text-5xl"
                                 >
-                                    {isRunning ? "Menjalankan..." : "Jalankan Seeder"}
-                                </button>
-                                {isRunning && (
-                                    <button
-                                        onClick={handleStop}
-                                        className="seeder-stop-button"
-                                        type="button"
-                                    >
-                                        Stop
-                                    </button>
-                                )}
-                                <div className="seeder-status">
-                                    <span
-                                        className={`status-dot ${isRunning ? "is-running" : "is-idle"}`}
-                                    />
-                                    <span>{isRunning ? "Seeder berjalan" : "Siap dijalankan"}</span>
+                                    🤖
+                                </motion.div>
+                                <div>
+                                    <span className="royal-badge mb-2 inline-block">Seeder Utility</span>
+                                    <h1 className="royal-title m-0">Database Seeder</h1>
                                 </div>
                             </div>
-                        </div>
-                    </article>
 
-                    <article className="seeder-card">
-                        <h3>Ringkasan</h3>
-                        <div className="seeder-meta">
-                            <div>
-                                <span>Target endpoint</span>
-                                <strong>/api</strong>
-                            </div>
-                            <div>
-                                <span>Mode files</span>
-                                <strong>{withFiles ? "Dengan file" : "Tanpa file"}</strong>
-                            </div>
-                            <div>
-                                <span>Estimasi waktu</span>
-                                <strong>10-20 detik</strong>
-                            </div>
-                            <div>
-                                <span>Keberhasilan</span>
-                                <strong>
-                                    {successStats
-                                        ? `${successStats.success}/${successStats.total} (${successStats.rate}%)`
-                                        : isRunning
-                                            ? "Sedang berjalan"
-                                            : "Belum ada data"}
-                                </strong>
-                            </div>
-                            <div>
-                                <span>Log tersimpan</span>
-                                <strong>{logs.length} baris</strong>
-                            </div>
+                            <Link href="/">
+                                <motion.button
+                                    className="royal-button-secondary"
+                                    whileHover={{ scale: 1.05 }}
+                                    whileTap={{ scale: 0.95 }}
+                                >
+                                    ← Kembali
+                                </motion.button>
+                            </Link>
                         </div>
-                    </article>
-                </div>
+                        <p className="royal-subtitle">
+                            Generate data pendaftar dan file dummy untuk uji aplikasi dengan
+                            cepat dan mudah.
+                        </p>
+                    </motion.header>
 
-                <section className="seeder-console" aria-live="polite">
-                    <div className="seeder-console-header">
-                        <div>
-                            <h3>Log Output</h3>
-                            <p>Log akan otomatis scroll saat ada update.</p>
-                        </div>
-                        <div className="seeder-console-meta">
-                            <span className={`status-pill ${isRunning ? "is-running" : "is-idle"}`}>
-                                {isRunning ? "Running" : "Idle"}
-                            </span>
-                            <span>{logs.length} baris</span>
-                        </div>
+                    {/* Main Grid */}
+                    <div className="grid grid-cols-1 lg:grid-cols-5 gap-6 mb-6">
+                        {/* Configuration Card */}
+                        <motion.div variants={itemVariants} className="lg:col-span-3">
+                            <div className="royal-card h-full">
+                                <h3 className="royal-section-title mb-6">⚙️ Konfigurasi</h3>
+
+                                <div className="space-y-6">
+                                    {/* Count Input */}
+                                    <div>
+                                        <label htmlFor="seed-count" className="royal-label block mb-2">
+                                            Jumlah Data Pendaftar
+                                        </label>
+                                        <div className="flex items-center gap-4">
+                                            <input
+                                                id="seed-count"
+                                                type="range"
+                                                value={count}
+                                                onChange={(e) => setCount(parseInt(e.target.value))}
+                                                min="1"
+                                                max="100"
+                                                className="flex-1 h-2 bg-noir-lighter rounded-lg appearance-none cursor-pointer"
+                                                style={{
+                                                    background: `linear-gradient(to right, var(--gold-base) 0%, var(--gold-base) ${count}%, var(--noir-lighter) ${count}%, var(--noir-lighter) 100%)`,
+                                                }}
+                                            />
+                                            <motion.div
+                                                className="royal-stat-card px-6 py-3 min-w-[100px] text-center"
+                                                key={count}
+                                                initial={{ scale: 1.2 }}
+                                                animate={{ scale: 1 }}
+                                            >
+                                                <div className="text-3xl font-bold text-gold-light">
+                                                    {count}
+                                                </div>
+                                                <div className="text-xs text-text-muted mt-1">entri</div>
+                                            </motion.div>
+                                        </div>
+                                    </div>
+
+                                    {/* With Files Toggle */}
+                                    <motion.label
+                                        htmlFor="withFiles"
+                                        className="flex items-center gap-4 p-4 rounded-xl border-2 border-dashed cursor-pointer transition-all"
+                                        style={{
+                                            borderColor: withFiles
+                                                ? "var(--gold-base)"
+                                                : "var(--border-subtle)",
+                                            background: withFiles
+                                                ? "rgba(212, 175, 55, 0.05)"
+                                                : "transparent",
+                                        }}
+                                        whileHover={{ scale: 1.02 }}
+                                        whileTap={{ scale: 0.98 }}
+                                    >
+                                        <input
+                                            type="checkbox"
+                                            id="withFiles"
+                                            checked={withFiles}
+                                            onChange={(e) => setWithFiles(e.target.checked)}
+                                            className="w-5 h-5 accent-gold-base cursor-pointer"
+                                        />
+                                        <div className="flex-1">
+                                            <div className="font-semibold text-text-primary">
+                                                Upload Dummy Files
+                                            </div>
+                                            <div className="text-sm text-text-muted">
+                                                Foto, ijazah, dan dokumen lainnya
+                                            </div>
+                                        </div>
+                                        <motion.span
+                                            className="text-2xl"
+                                            animate={withFiles ? { rotate: [0, 10, -10, 0] } : {}}
+                                            transition={{ duration: 0.5 }}
+                                        >
+                                            {withFiles ? "✅" : "⬜"}
+                                        </motion.span>
+                                    </motion.label>
+
+                                    {/* Actions */}
+                                    <div className="flex items-center gap-4 flex-wrap pt-4">
+                                        <motion.button
+                                            onClick={handleRun}
+                                            disabled={isRunning}
+                                            className="royal-button flex-1 min-w-[200px]"
+                                            whileHover={!isRunning ? { scale: 1.05 } : {}}
+                                            whileTap={!isRunning ? { scale: 0.95 } : {}}
+                                        >
+                                            {isRunning ? (
+                                                <>
+                                                    <motion.span
+                                                        animate={{ rotate: 360 }}
+                                                        transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                                                    >
+                                                        ⏳
+                                                    </motion.span>
+                                                    Menjalankan...
+                                                </>
+                                            ) : (
+                                                <>
+                                                    🚀 Jalankan Seeder
+                                                </>
+                                            )}
+                                        </motion.button>
+
+                                        <AnimatePresence>
+                                            {isRunning && (
+                                                <motion.button
+                                                    onClick={handleStop}
+                                                    className="royal-button-secondary"
+                                                    initial={{ opacity: 0, scale: 0.8 }}
+                                                    animate={{ opacity: 1, scale: 1 }}
+                                                    exit={{ opacity: 0, scale: 0.8 }}
+                                                    whileHover={{ scale: 1.05 }}
+                                                    whileTap={{ scale: 0.95 }}
+                                                >
+                                                    ⏹️ Stop
+                                                </motion.button>
+                                            )}
+                                        </AnimatePresence>
+
+                                        <div className="flex items-center gap-2">
+                                            <motion.div
+                                                className={`status-dot ${isRunning ? "status-warning" : "status-idle"
+                                                    }`}
+                                                animate={isRunning ? { scale: [1, 1.2, 1] } : {}}
+                                                transition={{ duration: 1, repeat: Infinity }}
+                                            />
+                                            <span className="text-sm text-text-secondary">
+                                                {isRunning ? "Seeder berjalan" : "Siap dijalankan"}
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </motion.div>
+
+                        {/* Summary Card */}
+                        <motion.div variants={itemVariants} className="lg:col-span-2">
+                            <div className="royal-card h-full">
+                                <h3 className="royal-section-title mb-6">📊 Ringkasan</h3>
+
+                                <div className="space-y-4">
+                                    <div className="royal-stat-card">
+                                        <p className="royal-label mb-1">Target Endpoint</p>
+                                        <p className="text-text-primary font-mono">/api</p>
+                                    </div>
+
+                                    <div className="royal-stat-card">
+                                        <p className="royal-label mb-1">Mode Files</p>
+                                        <p className="text-text-primary">
+                                            {withFiles ? "✅ Dengan file" : "❌ Tanpa file"}
+                                        </p>
+                                    </div>
+
+                                    <div className="royal-stat-card">
+                                        <p className="royal-label mb-1">Estimasi Waktu</p>
+                                        <p className="text-text-primary">10-20 detik</p>
+                                    </div>
+
+                                    <div className="royal-stat-card">
+                                        <p className="royal-label mb-1">Keberhasilan</p>
+                                        <motion.p
+                                            className="text-text-primary font-semibold"
+                                            key={successStats?.rate}
+                                            initial={{ scale: 1.1, color: "var(--gold-light)" }}
+                                            animate={{ scale: 1, color: "var(--text-primary)" }}
+                                        >
+                                            {successStats
+                                                ? `${successStats.success}/${successStats.total} (${successStats.rate}%)`
+                                                : isRunning
+                                                    ? "Sedang berjalan..."
+                                                    : "Belum ada data"}
+                                        </motion.p>
+                                    </div>
+
+                                    <div className="royal-stat-card">
+                                        <p className="royal-label mb-1">Log Tersimpan</p>
+                                        <motion.p
+                                            className="text-text-primary"
+                                            key={logs.length}
+                                            initial={{ scale: 1.1 }}
+                                            animate={{ scale: 1 }}
+                                        >
+                                            {logs.length} baris
+                                        </motion.p>
+                                    </div>
+                                </div>
+                            </div>
+                        </motion.div>
                     </div>
 
-                    <div className="seeder-progress">
-                        <div className="progress-track">
-                            <div
-                                className={`progress-bar ${isRunning && !successStats ? "is-loading" : ""}`}
-                                style={
-                                    successStats
-                                        ? { width: `${successStats.rate}%` }
-                                        : undefined
-                                }
-                            />
+                    {/* Console Output */}
+                    <motion.div variants={itemVariants} className="royal-card">
+                        <div className="flex items-center justify-between mb-4">
+                            <div>
+                                <h3 className="royal-section-title mb-1">💻 Log Output</h3>
+                                <p className="text-sm text-text-muted">
+                                    Log akan otomatis scroll saat ada update
+                                </p>
+                            </div>
+                            <div className="flex items-center gap-4">
+                                <span
+                                    className="px-3 py-1 rounded-full text-xs font-bold uppercase"
+                                    style={{
+                                        background: isRunning
+                                            ? "rgba(245, 158, 11, 0.2)"
+                                            : "rgba(100, 116, 139, 0.2)",
+                                        color: isRunning ? "#fbbf24" : "#94a3b8",
+                                    }}
+                                >
+                                    {isRunning ? "Running" : "Idle"}
+                                </span>
+                                <span className="text-sm text-text-muted">{logs.length} baris</span>
+                            </div>
                         </div>
-                        <div className="progress-meta">
-                            {successStats
-                                ? `Berhasil ${successStats.success}/${successStats.total} (${successStats.rate}%)`
-                                : isRunning
-                                    ? "Memproses data..."
-                                    : "Belum ada progres"}
-                        </div>
-                    </div>
 
-                    <div className="seeder-output" role="log">
-                        {logs.length === 0 ? (
-                            <span className="seeder-placeholder">
-                                // Output log akan tampil setelah proses dijalankan.
-                            </span>
-                        ) : (
-                            logs.join("\n")
-                        )}
-                        <div ref={logsEndRef} />
-                    </div>
-                </section>
-            </section>
-        </main>
+                        {/* Progress Bar */}
+                        <div className="mb-4">
+                            <div className="h-2 bg-noir-deep rounded-full overflow-hidden">
+                                <motion.div
+                                    className="h-full"
+                                    style={{
+                                        background: "var(--gradient-gold)",
+                                        width: successStats ? `${successStats.rate}%` : "0%",
+                                    }}
+                                    initial={{ width: "0%" }}
+                                    animate={{
+                                        width: successStats ? `${successStats.rate}%` : "0%",
+                                    }}
+                                    transition={{ duration: 0.5, ease: "easeOut" }}
+                                />
+                            </div>
+                            <p className="text-xs text-text-muted mt-2">
+                                {successStats
+                                    ? `Berhasil ${successStats.success}/${successStats.total} (${successStats.rate}%)`
+                                    : isRunning
+                                        ? "Memproses data..."
+                                        : "Belum ada progres"}
+                            </p>
+                        </div>
+
+                        {/* Log Display */}
+                        <div
+                            className="bg-noir-deep border border-border-subtle rounded-xl p-4 font-mono text-sm overflow-y-auto"
+                            style={{ height: "320px" }}
+                        >
+                            <AnimatePresence>
+                                {logs.length === 0 ? (
+                                    <motion.div
+                                        className="text-text-muted italic"
+                                        initial={{ opacity: 0 }}
+                                        animate={{ opacity: 1 }}
+                                    >
+                    // Output log akan tampil setelah proses dijalankan.
+                                    </motion.div>
+                                ) : (
+                                    <motion.div
+                                        initial={{ opacity: 0 }}
+                                        animate={{ opacity: 1 }}
+                                        className="space-y-1"
+                                    >
+                                        {logs.map((log, idx) => (
+                                            <motion.div
+                                                key={idx}
+                                                initial={{ opacity: 0, x: -20 }}
+                                                animate={{ opacity: 1, x: 0 }}
+                                                transition={{ delay: idx * 0.02 }}
+                                                className="text-text-secondary"
+                                            >
+                                                <span className="text-gold-base mr-2">[{idx + 1}]</span>
+                                                {log}
+                                            </motion.div>
+                                        ))}
+                                    </motion.div>
+                                )}
+                            </AnimatePresence>
+                            <div ref={logsEndRef} />
+                        </div>
+                    </motion.div>
+
+                    {/* Footer */}
+                    <motion.footer variants={itemVariants} className="royal-footer mt-12">
+                        <p>Database Seeder • Royal Noir Gold Edition</p>
+                    </motion.footer>
+                </motion.div>
+            </div>
+        </div>
     );
 }
