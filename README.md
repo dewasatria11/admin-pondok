@@ -9,7 +9,7 @@ Admin-only endpoint to wipe Supabase Storage and database tables in one request.
 npm install
 ```
 
-2) Create `.env.local`
+2) Create `.env.local`lll
 ```
 SUPABASE_URL=https://sxbvadzcwpaovkhghttv.supabase.co
 SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
