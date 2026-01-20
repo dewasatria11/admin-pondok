@@ -4,8 +4,6 @@ import { useState, useMemo } from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
 
-const CONFIRM_TEXT = "HAPUS SEMUA";
-
 type WipeResult = {
   ok: boolean;
   storage?: { bucket: string; deletedFiles: number };
@@ -50,7 +48,6 @@ const cardHoverVariants = {
 
 export default function HomePage() {
   const [token, setToken] = useState("");
-  const [confirmText, setConfirmText] = useState("");
   const [status, setStatus] = useState<"idle" | "loading" | "done" | "error">(
     "idle"
   );
@@ -60,10 +57,9 @@ export default function HomePage() {
   const canSubmit = useMemo(() => {
     return (
       token.trim().length > 0 &&
-      confirmText.trim().toUpperCase() === CONFIRM_TEXT &&
       status !== "loading"
     );
-  }, [token, confirmText, status]);
+  }, [token, status]);
 
   const handleWipe = async () => {
     if (!canSubmit) return;
@@ -91,7 +87,6 @@ export default function HomePage() {
       setResult(payload);
       setStatus("done");
       setMessage("Wipe selesai dijalankan.");
-      setConfirmText("");
     } catch (error) {
       setStatus("error");
       setMessage(
@@ -254,51 +249,11 @@ export default function HomePage() {
               <h2 className="royal-section-title m-0">Admin Wipe Console</h2>
             </div>
             <p className="royal-subtitle">
-              Dashboard ini hanya untuk operasi wipe. Pastikan kamu paham risiko
-              sebelum menekan tombol.
+              Masukkan admin token untuk menjalankan operasi wipe "hapus-semua-2026-super-rahasia". Aksi ini akan menghapus semua data dan tidak dapat dibatalkan.
             </p>
           </div>
 
-          {/* Info Grid */}
-          <div className="royal-grid royal-grid-3 mb-8">
-            <motion.div
-              className="royal-stat-card"
-              whileHover={{ scale: 1.02 }}
-            >
-              <p className="royal-label mb-2">Bucket Target</p>
-              <p className="text-text-secondary font-mono text-sm">
-                pendaftar-files
-              </p>
-              <span className="text-xs text-text-muted">(recursive delete)</span>
-            </motion.div>
-
-            <motion.div
-              className="royal-stat-card"
-              whileHover={{ scale: 1.02 }}
-            >
-              <p className="royal-label mb-2">Database Target</p>
-              <p className="text-text-secondary font-mono text-sm">
-                public.pembayaran
-              </p>
-              <p className="text-text-secondary font-mono text-sm">
-                public.pendaftar
-              </p>
-            </motion.div>
-
-            <motion.div
-              className="royal-stat-card"
-              whileHover={{ scale: 1.02 }}
-            >
-              <p className="royal-label mb-2">Status Terakhir</p>
-              <p className="text-text-secondary text-sm">
-                {result?.ok
-                  ? `${result.storage?.deletedFiles ?? 0} file dihapus`
-                  : "Belum ada aksi"}
-              </p>
-            </motion.div>
-          </div>
-
-          {/* Danger Zone */}
+          {/* Simplified Wipe Form */}
           <motion.div
             className="p-6 rounded-2xl border-2 border-dashed"
             style={{ borderColor: "rgba(239, 68, 68, 0.3)" }}
@@ -308,8 +263,7 @@ export default function HomePage() {
               ⚡ Zona Bahaya
             </h3>
             <p className="royal-subtitle mb-6">
-              Wipe akan menghapus semua file di Storage dan mengosongkan tabel
-              pembayaran serta pendaftar. Aksi ini tidak dapat dibatalkan.
+              Operasi ini akan menghapus semua file di Storage bucket <code className="px-2 py-1 bg-noir-deep rounded text-xs">pendaftar-files</code> dan mengosongkan tabel <code className="px-2 py-1 bg-noir-deep rounded text-xs">public.pembayaran</code> & <code className="px-2 py-1 bg-noir-deep rounded text-xs">public.pendaftar</code>.
             </p>
 
             <div className="space-y-4 mb-6">
@@ -323,20 +277,6 @@ export default function HomePage() {
                   placeholder="Masukkan x-admin-token"
                   value={token}
                   onChange={(e) => setToken(e.target.value)}
-                  className="royal-input"
-                />
-              </div>
-
-              <div>
-                <label htmlFor="confirm-text" className="royal-label block mb-2">
-                  Ketik &quot;{CONFIRM_TEXT}&quot; untuk konfirmasi
-                </label>
-                <input
-                  id="confirm-text"
-                  type="text"
-                  placeholder={CONFIRM_TEXT}
-                  value={confirmText}
-                  onChange={(e) => setConfirmText(e.target.value)}
                   className="royal-input"
                 />
               </div>
@@ -370,23 +310,42 @@ export default function HomePage() {
                 )}
               </motion.button>
 
-              <div className="flex items-center gap-3">
-                <motion.div
-                  className={`status-dot ${status === "loading"
+              <div className="flex flex-col items-end gap-2">
+                {/* Elegant Wipe Result */}
+                {result?.ok && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="px-4 py-2 rounded-lg bg-gradient-to-r from-emerald-950/30 to-emerald-900/20 border border-emerald-500/30"
+                  >
+                    <span className="text-emerald-400 font-bold text-lg">
+                      {result.storage?.deletedFiles ?? 0}
+                    </span>
+                    <span className="text-emerald-300 text-sm ml-2">
+                      file terhapus
+                    </span>
+                  </motion.div>
+                )}
+
+                {/* Status Indicator */}
+                <div className="flex items-center gap-3">
+                  <motion.div
+                    className={`status-dot ${status === "loading"
                       ? "status-warning"
                       : status === "done"
                         ? "status-ok"
                         : status === "error"
                           ? "status-error"
                           : "status-idle"
-                    }`}
-                  animate={status === "loading" ? { scale: [1, 1.2, 1] } : {}}
-                  transition={{ duration: 1, repeat: Infinity }}
-                />
-                <span className="text-sm text-text-secondary">
-                  <strong className="text-text-primary">Status:</strong>{" "}
-                  {message || "Siap menjalankan wipe."}
-                </span>
+                      }`}
+                    animate={status === "loading" ? { scale: [1, 1.2, 1] } : {}}
+                    transition={{ duration: 1, repeat: Infinity }}
+                  />
+                  <span className="text-sm text-text-secondary">
+                    <strong className="text-text-primary">Status:</strong>{" "}
+                    {message || "Siap menjalankan wipe."}
+                  </span>
+                </div>
               </div>
             </div>
           </motion.div>
