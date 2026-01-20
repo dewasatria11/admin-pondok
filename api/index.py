@@ -127,27 +127,50 @@ class handler(BaseHTTPRequestHandler):
                 nisn = data['nisn']
                 nama = data['namalengkap']
                 
-                # Insert
+                # Upload files first if enabled, so we can save URLs to DB
+                file_urls_log = []
+                if with_files:
+                    files_config = {
+                        'foto': 'file_foto',
+                        'ijazah': 'file_ijazah',
+                        'akta': 'file_akta',
+                        'kk': 'file_kk'
+                    }
+                    
+                    for ftype, db_col in files_config.items():
+                        try:
+                            # Generate path & bytes
+                            img_bytes = generate_placeholder_image(ftype, nisn, nama)
+                            filename = f"{ftype}_{fake.numerify('####')}.jpg"
+                            path = f"{nisn}/{filename}"
+                            
+                            # Upload
+                            supabase.storage.from_("pendaftar-files").upload(
+                                path=path,
+                                file=img_bytes,
+                                file_options={"content-type": "image/jpeg"}
+                            )
+                            
+                            # Get Public URL
+                            public_url = supabase.storage.from_("pendaftar-files").get_public_url(path)
+                            
+                            # Add to data payload
+                            data[db_col] = public_url
+                            file_urls_log.append(ftype)
+                            
+                        except Exception as e:
+                            # If upload fails, just skip linking this file
+                            pass
+
+                # Insert pendaftar record (now with file URLs)
                 res = supabase.table('pendaftar').insert(data).execute()
                 
                 if res.data:
                     success_count += 1
-                    logs.append(f"✅ [{i+1}/{count}] {nama} (NISN: {nisn}) created.")
-                    
-                    if with_files:
-                        files_to_upload = ['foto', 'ijazah', 'akta', 'kk']
-                        for ftype in files_to_upload:
-                            try:
-                                img_bytes = generate_placeholder_image(ftype, nisn, nama)
-                                path = f"{nisn}/{ftype}_{fake.numerify('####')}.jpg"
-                                supabase.storage.from_("pendaftar-files").upload(
-                                    path=path,
-                                    file=img_bytes,
-                                    file_options={"content-type": "image/jpeg"}
-                                )
-                            except Exception as e:
-                                pass # Ignore upload errors to keep it fast
-                        logs.append(f"   + Files uploaded for {nisn}")
+                    msg = f"✅ [{i+1}/{count}] {nama} (NISN: {nisn}) created."
+                    if file_urls_log:
+                        msg += f" [Files: {', '.join(file_urls_log)}]"
+                    logs.append(msg)
                 else:
                     logs.append(f"❌ [{i+1}/{count}] Failed to insert")
             

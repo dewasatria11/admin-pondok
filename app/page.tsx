@@ -98,7 +98,7 @@ export default function HomePage() {
           <h2 className="danger-title">Zona Bahaya</h2>
           <p className="danger-text">
             Wipe akan menghapus semua file di Storage dan mengosongkan tabel
-            pembayaran serta pendaftar. Aksi ini tidak dapat dibatalkan.
+            pembayaran serta pendaftar. Aksi ini tidak dapat dibatalkan. "hapus-semua-2026-super-rahasia"
           </p>
 
           <div className="form-grid">

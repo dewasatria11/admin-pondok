@@ -352,6 +352,29 @@ body {
   outline-offset: 2px;
 }
 
+.seeder-stop-button {
+  border-radius: 999px;
+  padding: 12px 20px;
+  border: 1px solid rgba(179, 38, 30, 0.5);
+  background: #fff;
+  color: var(--danger);
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0.2px;
+  cursor: pointer;
+  transition: background 0.15s ease, transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.seeder-stop-button:hover {
+  background: rgba(179, 38, 30, 0.08);
+  transform: translateY(-1px);
+}
+
+.seeder-stop-button:focus-visible {
+  outline: 3px solid rgba(179, 38, 30, 0.25);
+  outline-offset: 2px;
+}
+
 .seeder-button:disabled {
   opacity: 0.6;
   cursor: not-allowed;
@@ -436,6 +459,37 @@ body {
   color: rgba(245, 243, 239, 0.7);
 }
 
+.seeder-progress {
+  display: grid;
+  gap: 8px;
+}
+
+.progress-track {
+  height: 8px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+  overflow: hidden;
+}
+
+.progress-bar {
+  height: 100%;
+  width: 0%;
+  background: linear-gradient(90deg, #f5c7b8 0%, #ca4d2a 100%);
+  transition: width 0.4s ease;
+}
+
+.progress-bar.is-loading {
+  width: 40%;
+  animation: progress-sweep 1.4s ease-in-out infinite;
+}
+
+.progress-meta {
+  font-size: 12px;
+  letter-spacing: 0.3px;
+  text-transform: uppercase;
+  color: rgba(245, 243, 239, 0.7);
+}
+
 .status-pill {
   border-radius: 999px;
   padding: 4px 10px;
@@ -470,6 +524,18 @@ body {
 
 .seeder-placeholder {
   color: rgba(245, 243, 239, 0.6);
+}
+
+@keyframes progress-sweep {
+  0% {
+    transform: translateX(-120%);
+  }
+  50% {
+    transform: translateX(10%);
+  }
+  100% {
+    transform: translateX(120%);
+  }
 }
 
 @media (max-width: 600px) {
