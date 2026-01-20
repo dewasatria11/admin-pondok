@@ -139,26 +139,72 @@ export default function HomePage() {
       </section>
       <section className="panel" style={{ marginTop: '2rem' }}>
         <header className="header">
-          <span className="badge" style={{ backgroundColor: '#2563EB', color: 'white' }}>Utility Tools</span>
-          <h2 className="title" style={{ fontSize: '1.5rem' }}>Data Seeder</h2>
+          <span className="badge" style={{ backgroundColor: '#0f172a', color: 'white' }}>Utility Tools</span>
+          <h2 className="title" style={{ fontSize: '1.5rem' }}>Admin Utilities</h2>
           <p className="subtitle">
-            Generate dummy data (pendaftar & file) untuk testing aplikasi.
+            Kumpulan alat bantu untuk monitoring dan manajemen sistem.
           </p>
         </header>
 
-        <div className="actions" style={{ marginTop: '1.5rem' }}>
-          <a
-            href="/seeder"
-            className="wipe-button"
-            style={{
-              backgroundColor: '#2563EB',
-              textDecoration: 'none',
-              textAlign: 'center',
-              display: 'inline-block'
-            }}
-          >
-            Buka Seeder Bot →
-          </a>
+        <div className="content-grid" style={{ marginTop: '1.5rem', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))' }}>
+
+          {/* Seeder Card */}
+          <div className="info-card" style={{ background: '#f8fafc', borderColor: '#e2e8f0' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <h3 style={{ fontSize: '1.1rem', color: '#1e293b' }}>🤖 Data Seeder</h3>
+            </div>
+            <p style={{ color: '#64748b' }}>Generate dummy data pendaftar & file secara otomatis.</p>
+            <a
+              href="/seeder"
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                backgroundColor: '#2563EB',
+                color: 'white',
+                textDecoration: 'none',
+                padding: '10px 20px',
+                borderRadius: '99px',
+                fontWeight: 600,
+                marginTop: '10px',
+                fontSize: '14px'
+              }}
+            >
+              Buka Seeder Bot
+            </a>
+          </div>
+
+          {/* Monitor Card */}
+          <div className="info-card" style={{ background: '#0f172a', borderColor: '#1e293b' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <h3 style={{ fontSize: '1.1rem', color: '#38bdf8', margin: 0 }}>📊 System Monitor</h3>
+              <span className="relative flex h-3 w-3">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-sky-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-3 w-3 bg-sky-500"></span>
+              </span>
+            </div>
+            <p style={{ color: '#94a3b8' }}>Real-time health check: Database, Storage & Latency.</p>
+            <a
+              href="/monitor"
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                background: 'linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%)',
+                color: 'white',
+                textDecoration: 'none',
+                padding: '10px 20px',
+                borderRadius: '99px',
+                fontWeight: 600,
+                marginTop: '10px',
+                fontSize: '14px',
+                boxShadow: '0 4px 12px rgba(14, 165, 233, 0.3)'
+              }}
+            >
+              Buka Dashboard
+            </a>
+          </div>
+
         </div>
       </section>
     </main>

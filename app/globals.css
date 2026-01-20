@@ -236,6 +236,40 @@ body {
   color: var(--ink);
 }
 
+.seeder-header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.seeder-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: #fff;
+  color: var(--ink);
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.2px;
+  text-decoration: none;
+  transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
+}
+
+.seeder-back:hover {
+  background: rgba(28, 26, 23, 0.04);
+  transform: translateY(-1px);
+}
+
+.seeder-back:focus-visible {
+  outline: 3px solid rgba(202, 77, 42, 0.25);
+  outline-offset: 2px;
+}
+
 .seeder-grid {
   display: grid;
   grid-template-columns: minmax(0, 1.2fr) minmax(0, 0.8fr);

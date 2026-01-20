@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useState, useRef, useEffect, useMemo } from "react";
 
 export default function SeederPage() {
@@ -120,7 +121,12 @@ export default function SeederPage() {
         <main className="page">
             <section className="panel seeder-panel">
                 <header className="header">
-                    <span className="badge seeder-badge">Seeder Utility</span>
+                    <div className="seeder-header-row">
+                        <span className="badge seeder-badge">Seeder Utility</span>
+                        <Link href="/" className="seeder-back">
+                            ← Kembali ke Dashboard
+                        </Link>
+                    </div>
                     <h1 className="title">Database Seeder</h1>
                     <p className="subtitle">
                         Generate data pendaftar dan file dummy untuk uji aplikasi.
