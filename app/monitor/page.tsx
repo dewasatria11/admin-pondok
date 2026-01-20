@@ -302,7 +302,9 @@ function ModuleCard({
             <div className="flex items-end justify-between">
                 <div>
                     <div className={`font-bold text-white ${compact ? 'text-xl' : 'text-3xl'}`}>
-                        {isError ? '-' : (isStorage ? module.fileCount : module.count).toLocaleString()}
+                        {isError
+                            ? '-'
+                            : (isStorage ? module.fileCount ?? 0 : module.count ?? 0).toLocaleString()}
                     </div>
                     <div className="text-xs text-slate-500 mt-1">
                         {isStorage ? 'Object Files' : 'Total Rows'}
