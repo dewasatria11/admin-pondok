@@ -42,6 +42,7 @@ export default function TrafficMonitorPage() {
   );
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [errorDetails, setErrorDetails] = useState<string | null>(null);
 
   const fetchTraffic = async () => {
     try {
@@ -51,6 +52,9 @@ export default function TrafficMonitorPage() {
       if (!res.ok || json.status !== "ok") {
         setStatus("error");
         setErrorMessage(json.error || "Gagal mengambil data Cloudflare.");
+        setErrorDetails(
+          json.details ? JSON.stringify(json.details, null, 2) : null
+        );
         return;
       }
 
@@ -58,9 +62,11 @@ export default function TrafficMonitorPage() {
       setLastUpdated(new Date());
       setStatus("ready");
       setErrorMessage(null);
+      setErrorDetails(null);
     } catch (error: any) {
       setStatus("error");
       setErrorMessage(error?.message ?? "Gagal mengambil data Cloudflare.");
+      setErrorDetails(null);
     }
   };
 
@@ -153,6 +159,11 @@ export default function TrafficMonitorPage() {
             <p className="mt-2 text-sm text-rose-300">
               {errorMessage ?? "Periksa kembali token Cloudflare kamu."}
             </p>
+            {errorDetails && (
+              <pre className="mt-4 overflow-auto rounded-lg border border-rose-900/50 bg-rose-950/40 p-4 text-xs text-rose-100">
+                {errorDetails}
+              </pre>
+            )}
           </div>
         )}
 
