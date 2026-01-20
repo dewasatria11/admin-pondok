@@ -112,10 +112,13 @@ class handler(BaseHTTPRequestHandler):
             supabase_url = os.environ.get('SUPABASE_URL')
             supabase_key = os.environ.get('SUPABASE_SERVICE_ROLE_KEY') or os.environ.get('SUPABASE_SERVICE_KEY')
             
+            from supabase import Client, ClientOptions
+            
             if not supabase_url or not supabase_key:
                 raise Exception("Missing Supabase credentials in environment variables")
-                
-            supabase = create_client(supabase_url, supabase_key)
+            
+            # Use basic initialization to avoid proxy arg issues in some versions
+            supabase: Client = create_client(supabase_url, supabase_key)
             
             logs.append(f"Starting seeding for {count} records...")
             

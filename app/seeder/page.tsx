@@ -19,7 +19,10 @@ export default function SeederPage() {
 
     const handleRun = async () => {
         setIsRunning(true);
-        setLogs(["🚀 Starting seeder...", "Waiting for serverless function (this may take 10-20s)..."]);
+        setLogs([
+            "Menjalankan seeder...",
+            "Menunggu serverless function (sekitar 10-20 detik)...",
+        ]);
 
         try {
             // Call the Python Serverless Function directly
@@ -35,76 +38,128 @@ export default function SeederPage() {
             const data = await response.json();
 
             if (data.success) {
-                setLogs((prev) => [...prev, "Serverless execution completed:", ...data.logs]);
+                setLogs((prev) => [...prev, "Eksekusi serverless selesai:", ...data.logs]);
             } else {
-                setLogs((prev) => [...prev, `❌ Error from server: ${data.error || 'Unknown error'}`]);
+                setLogs((prev) => [
+                    ...prev,
+                    `Error dari server: ${data.error || "Unknown error"}`,
+                ]);
                 if (data.logs) setLogs((prev) => [...prev, ...data.logs]);
             }
 
         } catch (error: any) {
-            setLogs((prev) => [...prev, `❌ Network/Client Error: ${error.message}`]);
+            setLogs((prev) => [...prev, `Error jaringan/klien: ${error.message}`]);
         } finally {
             setIsRunning(false);
-            setLogs((prev) => [...prev, "🏁 Process finished."]);
+            setLogs((prev) => [...prev, "Proses selesai."]);
         }
     };
 
     return (
-        <div className="p-6 max-w-4xl mx-auto">
-            <h1 className="text-2xl font-bold mb-6">Database Seeder Bot (Serverless)</h1>
+        <main className="page">
+            <section className="panel seeder-panel">
+                <header className="header">
+                    <span className="badge seeder-badge">Seeder Utility</span>
+                    <h1 className="title">Database Seeder</h1>
+                    <p className="subtitle">
+                        Generate data pendaftar dan file dummy untuk uji aplikasi.
+                    </p>
+                </header>
 
-            <div className="bg-white p-6 rounded-lg shadow-md mb-6 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-end">
-                    <div>
-                        <label className="block text-sm font-medium mb-2">
-                            Jumlah Data (Pendaftar)
-                        </label>
-                        <input
-                            type="number"
-                            value={count}
-                            onChange={(e) => setCount(parseInt(e.target.value) || 0)}
-                            className="w-full p-2 border rounded-md dark:bg-zinc-800 dark:border-zinc-700"
-                            min="1"
-                            max="100"
-                        />
-                    </div>
+                <div className="seeder-grid">
+                    <article className="seeder-card">
+                        <h3>Konfigurasi</h3>
+                        <div className="seeder-form">
+                            <label htmlFor="seed-count">Jumlah data pendaftar</label>
+                            <div className="seeder-input">
+                                <input
+                                    id="seed-count"
+                                    type="number"
+                                    value={count}
+                                    onChange={(e) => setCount(parseInt(e.target.value) || 0)}
+                                    min="1"
+                                    max="100"
+                                />
+                                <span>entri</span>
+                            </div>
 
-                    <div className="flex items-center mb-3">
-                        <input
-                            type="checkbox"
-                            id="withFiles"
-                            checked={withFiles}
-                            onChange={(e) => setWithFiles(e.target.checked)}
-                            className="w-5 h-5 mr-3 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                        />
-                        <label htmlFor="withFiles" className="select-none cursor-pointer">
-                            Upload Dummy Files (Foto, Ijazah, dll)
-                        </label>
-                    </div>
+                            <label className="seeder-toggle" htmlFor="withFiles">
+                                <input
+                                    type="checkbox"
+                                    id="withFiles"
+                                    checked={withFiles}
+                                    onChange={(e) => setWithFiles(e.target.checked)}
+                                />
+                                <span>Upload dummy files (foto, ijazah, dll)</span>
+                            </label>
+
+                            <div className="seeder-actions">
+                                <button
+                                    onClick={handleRun}
+                                    disabled={isRunning}
+                                    className="seeder-button"
+                                >
+                                    {isRunning ? "Menjalankan..." : "Jalankan Seeder"}
+                                </button>
+                                <div className="seeder-status">
+                                    <span
+                                        className={`status-dot ${isRunning ? "is-running" : "is-idle"}`}
+                                    />
+                                    <span>{isRunning ? "Seeder berjalan" : "Siap dijalankan"}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </article>
+
+                    <article className="seeder-card">
+                        <h3>Ringkasan</h3>
+                        <div className="seeder-meta">
+                            <div>
+                                <span>Target endpoint</span>
+                                <strong>/api</strong>
+                            </div>
+                            <div>
+                                <span>Mode files</span>
+                                <strong>{withFiles ? "Dengan file" : "Tanpa file"}</strong>
+                            </div>
+                            <div>
+                                <span>Estimasi waktu</span>
+                                <strong>10-20 detik</strong>
+                            </div>
+                            <div>
+                                <span>Log tersimpan</span>
+                                <strong>{logs.length} baris</strong>
+                            </div>
+                        </div>
+                    </article>
                 </div>
 
-                <div className="mt-6">
-                    <button
-                        onClick={handleRun}
-                        disabled={isRunning}
-                        className={`px-6 py-2 rounded-md font-bold text-white transition-colors ${isRunning
-                                ? "bg-gray-400 cursor-not-allowed"
-                                : "bg-blue-600 hover:bg-blue-700"
-                            }`}
-                    >
-                        {isRunning ? "Sedang Berjalan..." : "Jalankan Seeder"}
-                    </button>
-                </div>
-            </div>
+                <section className="seeder-console" aria-live="polite">
+                    <div className="seeder-console-header">
+                        <div>
+                            <h3>Log Output</h3>
+                            <p>Log akan otomatis scroll saat ada update.</p>
+                        </div>
+                        <div className="seeder-console-meta">
+                            <span className={`status-pill ${isRunning ? "is-running" : "is-idle"}`}>
+                                {isRunning ? "Running" : "Idle"}
+                            </span>
+                            <span>{logs.length} baris</span>
+                        </div>
+                    </div>
 
-            <div className="bg-black text-green-400 p-4 rounded-lg font-mono text-sm h-96 overflow-y-auto whitespace-pre-wrap">
-                {logs.length === 0 ? (
-                    <span className="text-gray-500">// Output logs will appear here after process completes...</span>
-                ) : (
-                    logs.join("\n")
-                )}
-                <div ref={logsEndRef} />
-            </div>
-        </div>
+                    <div className="seeder-output" role="log">
+                        {logs.length === 0 ? (
+                            <span className="seeder-placeholder">
+                                // Output log akan tampil setelah proses dijalankan.
+                            </span>
+                        ) : (
+                            logs.join("\n")
+                        )}
+                        <div ref={logsEndRef} />
+                    </div>
+                </section>
+            </section>
+        </main>
     );
 }
