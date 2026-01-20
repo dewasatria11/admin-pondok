@@ -1,0 +1,4 @@
+faker
+supabase
+python-dotenv
+pillow
