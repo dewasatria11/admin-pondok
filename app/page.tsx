@@ -137,6 +137,30 @@ export default function HomePage() {
           </div>
         </section>
       </section>
+      <section className="panel" style={{ marginTop: '2rem' }}>
+        <header className="header">
+          <span className="badge" style={{ backgroundColor: '#2563EB', color: 'white' }}>Utility Tools</span>
+          <h2 className="title" style={{ fontSize: '1.5rem' }}>Data Seeder</h2>
+          <p className="subtitle">
+            Generate dummy data (pendaftar & file) untuk testing aplikasi.
+          </p>
+        </header>
+
+        <div className="actions" style={{ marginTop: '1.5rem' }}>
+          <a
+            href="/seeder"
+            className="wipe-button"
+            style={{
+              backgroundColor: '#2563EB',
+              textDecoration: 'none',
+              textAlign: 'center',
+              display: 'inline-block'
+            }}
+          >
+            Buka Seeder Bot →
+          </a>
+        </div>
+      </section>
     </main>
   );
 }
