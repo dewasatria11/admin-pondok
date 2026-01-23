@@ -25,8 +25,8 @@ fake = Faker('id_ID')
 
 # Constants
 IJAZAH_OPTIONS = ['SD', 'SMP', 'MI', 'MTs']
-TINGKAT_OPTIONS = ['MTs', 'MA']
-PROGRAM_OPTIONS = ['Reguler', 'Tahfidz', 'Tahfidz Intensif']
+TINGKAT_OPTIONS = ['MTs', 'MA', 'KULIAH']
+PROGRAM_OPTIONS = ['Asrama Putra Induk', 'Asrama Putra Tahfidz', 'Asrama Putri']
 STATUS_ORTU_OPTIONS = ['Hidup', 'Meninggal']
 PEKERJAAN_OPTIONS = [
     'Petani', 'Pedagang', 'PNS', 'Guru', 'Wiraswasta', 
