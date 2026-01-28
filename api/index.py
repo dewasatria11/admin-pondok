@@ -37,6 +37,13 @@ PROVINSI_OPTIONS = [
     'Jawa Barat', 'Jawa Tengah', 'Jawa Timur', 'DKI Jakarta', 
     'Banten', 'DIY Yogyakarta', 'Lampung', 'Sumatera Selatan'
 ]
+SEKOLAH_ASAL_OPTIONS = [
+    'SDN 1 Bandung', 'SDN 2 Jakarta', 'SDN 3 Surabaya', 'SDN 4 Semarang',
+    'MI Al-Hidayah', 'MI Nurul Iman', 'MI Al-Falah', 'MI Darul Ulum',
+    'SMPN 1 Bandung', 'SMPN 2 Jakarta', 'SMPN 3 Surabaya', 'SMPN 4 Yogyakarta',
+    'MTs Negeri 1 Jakarta', 'MTs Al-Ikhlas', 'MTs Darussalam', 'MTs Al-Hidayah',
+    'SD Islam Terpadu', 'SD Muhammadiyah', 'SMP Islam Terpadu', 'SMP Muhammadiyah'
+]
 FILE_TYPES = {
     'foto': {'label': 'Pas Foto', 'color': (76, 175, 80)},      
     'ijazah': {'label': 'Ijazah', 'color': (33, 150, 243)},     
@@ -71,6 +78,9 @@ def generate_pendaftar():
     jenis_kelamin = random.choice(['L', 'P'])
     nama_lengkap = fake.name_male() if jenis_kelamin == 'L' else fake.name_female()
     
+    # Generate nomor_kip (optional, 20% chance to have value)
+    nomor_kip = fake.numerify('K-####-####-####-####') if random.random() < 0.2 else None
+    
     return {
         'nikcalon': fake.numerify('################'),
         'nisn': fake.numerify('##########'),
@@ -84,6 +94,8 @@ def generate_pendaftar():
         'kotakabupaten': 'Kab. ' + fake.city(),
         'provinsi': random.choice(PROVINSI_OPTIONS),
         'ijazahformalterakhir': random.choice(IJAZAH_OPTIONS),
+        'nama_sekolah_asal': random.choice(SEKOLAH_ASAL_OPTIONS),
+        'nomor_kip': nomor_kip,
         'rencanatingkat': random.choice(TINGKAT_OPTIONS),
         'rencanaprogram': random.choice(PROGRAM_OPTIONS),
         'namaayah': fake.name_male(),
