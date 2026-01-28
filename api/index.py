@@ -146,7 +146,8 @@ class handler(BaseHTTPRequestHandler):
                         'foto': 'file_foto',
                         'ijazah': 'file_ijazah',
                         'akta': 'file_akta',
-                        'kk': 'file_kk'
+                        'kk': 'file_kk',
+                        'bpjs': 'file_bpjs'
                     }
                     
                     for ftype, db_col in files_config.items():
